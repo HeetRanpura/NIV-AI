@@ -27,8 +27,6 @@ from firebase.firestore_ops import (
     get_behavioral_intake,
     save_financial_inputs,
     save_simulation_results,
-    save_report_url,
-    get_report_url,
 )
 from schemas.schemas import (
     UserInput,
@@ -38,7 +36,6 @@ from schemas.schemas import (
     AnalysisResponse,
     SessionStartResponse,
     ConversationResponse,
-    ReportOutput,
     PresentationOutput,
     VerdictOutput,
 )
@@ -47,7 +44,6 @@ from agents.deterministic.financial_reality import calculate_affordability
 from agents.deterministic.scenario_simulation import run_all_scenarios
 from agents.deterministic.risk_scorer import calculate_risk_score
 from engines.pdf_generator import generate_pdf
-from storage.gcs_client import upload_pdf
 
 
 # ---------------------------------------------------------------------------
@@ -367,14 +363,14 @@ async def roundtable_ws(
 
 
 # ---------------------------------------------------------------------------
-# PDF report
+# PDF report — direct download, no cloud storage
 # ---------------------------------------------------------------------------
 
-@app.get("/report/{session_id}", response_model=APIResponse)
+@app.get("/report/{session_id}")
 async def get_report_route(session_id: str, uid: str = Depends(verify_token)):
     """
-    Generates or retrieves a PDF report for the session.
-    Returns a signed GCS URL valid for 7 days.
+    Generates a PDF report and returns it as a direct download.
+    No GCS upload — the browser downloads the file instantly.
     """
     session = get_session(session_id)
     if not session:
@@ -382,41 +378,16 @@ async def get_report_route(session_id: str, uid: str = Depends(verify_token)):
     if session.get("user_id") != uid:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Check for existing report
-    existing_url = get_report_url(session_id)
-    if existing_url:
-        return APIResponse(
-            success=True,
-            message="Report already generated",
-            data=ReportOutput(
-                session_id=session_id,
-                gcs_url=existing_url,
-                generated_at=datetime.now(timezone.utc).isoformat(),
-            ).model_dump(),
-        )
-
-    # Get presentation and verdict from Firestore simulation results
     from firebase.firebase_admin import db as firestore_db
-    sim_doc = firestore_db.collection("sessions").document(session_id) \
-        .collection("simulation_results").document("latest").get()
     verdict_doc = firestore_db.collection("sessions").document(session_id) \
         .collection("verdict").document("latest").get()
 
     if not verdict_doc.exists:
-        raise HTTPException(status_code=400, detail="Analysis not complete. Run /analyze and roundtable first.")
+        raise HTTPException(status_code=400, detail="Analysis not complete. Run analyze and roundtable first.")
 
     try:
-        verdict_data = verdict_doc.to_dict()
-        verdict_output = VerdictOutput(**verdict_data)
+        verdict_output = VerdictOutput(**verdict_doc.to_dict())
 
-        # Get presentation from session (set by orchestrator)
-        # The orchestrator stores presentation in the blackboard
-        # For PDF we need it — check if it's available in session
-        session_data = get_session(session_id)
-        if not session_data:
-            raise HTTPException(status_code=404, detail="Session not found")
-
-        # Try to get presentation from orchestrator's in-memory state
         presentation_output = None
         if orchestrator and session_id in orchestrator._blackboards:
             bb_state = orchestrator._blackboards[session_id].state
@@ -424,23 +395,17 @@ async def get_report_route(session_id: str, uid: str = Depends(verify_token)):
                 presentation_output = bb_state.presentation
 
         if not presentation_output:
-            raise HTTPException(
-                status_code=400,
-                detail="Presentation data not available. Run full analysis with roundtable first.",
-            )
+            raise HTTPException(status_code=400, detail="Presentation data not available. Run full analysis first.")
 
         pdf_bytes = generate_pdf(session_id, presentation_output, verdict_output)
-        gcs_url = upload_pdf(session_id, pdf_bytes)
-        save_report_url(session_id, gcs_url)
 
-        return APIResponse(
-            success=True,
-            message="Report generated",
-            data=ReportOutput(
-                session_id=session_id,
-                gcs_url=gcs_url,
-                generated_at=datetime.now(timezone.utc).isoformat(),
-            ).model_dump(),
+        from fastapi.responses import Response
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=niv-ai-report-{session_id[:8]}.pdf"
+            }
         )
     except HTTPException:
         raise
