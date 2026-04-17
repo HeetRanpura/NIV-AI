@@ -83,6 +83,8 @@ class PropertyType(str, Enum):
 class UserInput(BaseModel):
     # Monthly income after tax in rupees
     monthly_income: float
+    # Annual household income in rupees, used for subsidy eligibility and policy logic
+    annual_income: Optional[float] = None
     # Fixed monthly expenses excluding EMI in rupees
     monthly_expenses: float
     # Total savings available right now in rupees
@@ -142,10 +144,16 @@ class IndiaCostBreakdown(BaseModel):
     loan_processing_fee: float
     legal_charges: float
     true_total_cost: float
+    # True total cost after subsidy adjustments
+    effective_total_cost: float
     # Annual tax benefit under 80C on principal
     tax_benefit_80c: float
     # Annual tax benefit under 24B on interest
     tax_benefit_24b: float
+    # Approximate PMAY-CLSS subsidy present value
+    pmay_subsidy_npv: float
+    # Whether the applicant is eligible for PMAY support
+    pmay_eligible: bool
 
 
 # Deterministic agent outputs

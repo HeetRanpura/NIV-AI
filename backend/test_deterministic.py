@@ -43,6 +43,8 @@ def test_mumbai_scenario():
         property_type=user_input.property_type.value,
         loan_amount=loan_amount,
         area_sqft=user_input.area_sqft,
+        annual_income=user_input.monthly_income * 12,
+        tenure_years=user_input.tenure_years,
     )
     print(f"\n--- India Cost Breakdown ---")
     print(f"  Base price:        ₹{india_costs.base_price:,.0f}")
@@ -53,6 +55,9 @@ def test_mumbai_scenario():
     print(f"  Processing fee:    ₹{india_costs.loan_processing_fee:,.0f}")
     print(f"  Legal charges:     ₹{india_costs.legal_charges:,.0f}")
     print(f"  TRUE TOTAL COST:   ₹{india_costs.true_total_cost:,.0f}")
+    print(f"  PMAY eligible:     {'Yes' if india_costs.pmay_eligible else 'No'}")
+    print(f"  PMAY subsidy NPV:  ₹{india_costs.pmay_subsidy_npv:,.0f}")
+    print(f"  Effective total:   ₹{india_costs.effective_total_cost:,.0f}")
 
     # --- Financial Reality ---
     financial = calculate_affordability(user_input)
@@ -129,8 +134,12 @@ def test_pune_scenario():
         property_type=user_input.property_type.value,
         loan_amount=loan_amount,
         area_sqft=user_input.area_sqft,
+        annual_income=user_input.monthly_income * 12,
+        tenure_years=user_input.tenure_years,
     )
     print(f"\n  TRUE TOTAL COST:   ₹{india_costs.true_total_cost:,.0f}")
+    print(f"  PMAY eligible:     {'Yes' if india_costs.pmay_eligible else 'No'}")
+    print(f"  PMAY subsidy NPV:  ₹{india_costs.pmay_subsidy_npv:,.0f}")
     print(f"  GST (5%):          ₹{india_costs.gst:,.0f}")
     print(f"  Stamp duty (5.6%): ₹{india_costs.stamp_duty:,.0f}")
 

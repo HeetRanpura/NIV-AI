@@ -13,12 +13,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
+from fastapi import FastAPI, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from firebase.firebase_admin import initialize_firebase
-from firebase_admin import auth as firebase_auth
-from auth.middleware import verify_token
+from auth.middleware import verify_token, verify_websocket_token
 from firebase.firestore_ops import (
     create_session,
     get_session,
@@ -27,6 +29,8 @@ from firebase.firestore_ops import (
     get_behavioral_intake,
     save_financial_inputs,
     save_simulation_results,
+    get_presentation,
+    get_verdict,
 )
 from schemas.schemas import (
     UserInput,
@@ -40,6 +44,15 @@ from schemas.schemas import (
     VerdictOutput,
 )
 from engines.india_defaults import calculate_true_total_cost
+from engines.india_defaults import (
+    CURRENT_REPO_RATE,
+    DEFAULT_STAMP_DUTY_RATE,
+    GST_READY_TO_MOVE,
+    GST_UNDER_CONSTRUCTION,
+    INDIA_DEFAULTS_LAST_UPDATED,
+    PMAY_BRACKETS,
+    STAMP_DUTY_RATES,
+)
 from agents.deterministic.financial_reality import calculate_affordability
 from agents.deterministic.scenario_simulation import run_all_scenarios
 from agents.deterministic.risk_scorer import calculate_risk_score
@@ -56,11 +69,13 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS — allow frontend origin. In development allow all origins.
+environment = os.getenv("ENVIRONMENT", "development").lower()
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+cors_origins = ["*"] if environment != "production" else [frontend_url]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -70,10 +85,31 @@ app.add_middleware(
 orchestrator = None
 
 
+def _load_report_dependencies(session_id: str) -> tuple[PresentationOutput, VerdictOutput]:
+    presentation_data = get_presentation(session_id)
+    verdict_data = get_verdict(session_id)
+
+    if not presentation_data:
+        raise HTTPException(
+            status_code=400,
+            detail="Presentation data not available. Run full analysis first.",
+        )
+    if not verdict_data:
+        raise HTTPException(
+            status_code=400,
+            detail="Verdict data not available. Run roundtable first.",
+        )
+
+    return PresentationOutput(**presentation_data), VerdictOutput(**verdict_data)
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize Firebase and Orchestrator on app startup."""
     global orchestrator
+
+    if environment == "production" and os.getenv("SKIP_AUTH", "false").lower() == "true":
+        raise RuntimeError("SKIP_AUTH must be false in production")
 
     try:
         initialize_firebase()
@@ -89,6 +125,38 @@ async def startup_event():
         print(f"⚠️ Orchestrator init failed (Dev 2 code may not be ready): {e}")
 
 
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=APIResponse(success=False, message=str(exc.detail), data=None).model_dump(),
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content=APIResponse(
+            success=False,
+            message="Invalid request payload",
+            data={"errors": exc.errors()},
+        ).model_dump(),
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content=APIResponse(
+            success=False,
+            message="Internal server error",
+            data={"error": str(exc)} if environment != "production" else None,
+        ).model_dump(),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Health check
 # ---------------------------------------------------------------------------
@@ -96,6 +164,22 @@ async def startup_event():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "niv-ai-home-buying-advisor", "version": "1.0.0"}
+
+
+@app.get("/india/defaults")
+async def get_india_defaults():
+    """Public India-specific defaults for the frontend calculator."""
+    return {
+        "repo_rate": CURRENT_REPO_RATE,
+        "stamp_duty_rates": STAMP_DUTY_RATES,
+        "default_stamp_duty_rate": DEFAULT_STAMP_DUTY_RATE,
+        "gst_rules": {
+            "under_construction": GST_UNDER_CONSTRUCTION,
+            "ready_to_move": GST_READY_TO_MOVE,
+        },
+        "pmay_brackets": PMAY_BRACKETS,
+        "updated_at": INDIA_DEFAULTS_LAST_UPDATED,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -205,6 +289,8 @@ async def analyze_route(
             property_type=user_input.property_type.value,
             loan_amount=loan_amount,
             area_sqft=user_input.area_sqft if user_input.area_sqft else 1000,
+            annual_income=user_input.annual_income or (user_input.monthly_income * 12),
+            tenure_years=user_input.tenure_years,
         )
 
         financial_reality = calculate_affordability(user_input)
@@ -314,11 +400,9 @@ async def roundtable_ws(
     WebSocket endpoint for live roundtable streaming.
     Dev 3 connects as: ws://<host>/roundtable/<session_id>?token=<firebase_token>
     """
-    # Verify auth token
     try:
-        decoded = firebase_auth.verify_id_token(token)
-        user_uid = decoded["uid"]
-    except Exception:
+        user_uid = verify_websocket_token(token)
+    except HTTPException:
         await websocket.close(code=4001, reason="Invalid token")
         return
 
@@ -378,39 +462,47 @@ async def get_report_route(session_id: str, uid: str = Depends(verify_token)):
     if session.get("user_id") != uid:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    from firebase.firebase_admin import db as firestore_db
-    verdict_doc = firestore_db.collection("sessions").document(session_id) \
-        .collection("verdict").document("latest").get()
-
-    if not verdict_doc.exists:
-        raise HTTPException(status_code=400, detail="Analysis not complete. Run analyze and roundtable first.")
-
     try:
-        verdict_output = VerdictOutput(**verdict_doc.to_dict())
-
-        presentation_output = None
-        if orchestrator and session_id in orchestrator._blackboards:
-            bb_state = orchestrator._blackboards[session_id].state
-            if bb_state.presentation:
-                presentation_output = bb_state.presentation
-
-        if not presentation_output:
-            raise HTTPException(status_code=400, detail="Presentation data not available. Run full analysis first.")
-
+        presentation_output, verdict_output = _load_report_dependencies(session_id)
         pdf_bytes = generate_pdf(session_id, presentation_output, verdict_output)
-
-        from fastapi.responses import Response
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
                 "Content-Disposition": f"attachment; filename=niv-ai-report-{session_id[:8]}.pdf"
-            }
+            },
         )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+
+
+@app.get("/report/{session_id}/download")
+async def download_report_route(session_id: str, uid: str = Depends(verify_token)):
+    """Returns the generated PDF bytes directly for immediate browser download."""
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.get("user_id") != uid:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    try:
+        presentation_output, verdict_output = _load_report_dependencies(session_id)
+        pdf_bytes = generate_pdf(session_id, presentation_output, verdict_output)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="niv-ai-report-{session_id[:8]}.pdf"'
+                )
+            },
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Report download failed: {str(e)}")
 
 
 # ---------------------------------------------------------------------------

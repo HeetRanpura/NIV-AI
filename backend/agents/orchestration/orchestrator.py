@@ -121,6 +121,14 @@ class Orchestrator:
         )
         blackboard.set_presentation(presentation_result)
 
+        try:
+            from firebase.firestore_ops import save_presentation
+            await asyncio.to_thread(
+                save_presentation, session_id, presentation_result.model_dump()
+            )
+        except Exception as e:
+            print(f"Presentation save failed: {e}")
+
         # Update context state
         context_state = await self.context_agent.update(
             session_id=session_id,

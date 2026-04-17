@@ -11,7 +11,26 @@ All other functions are used by Dev 1's routes in main.py.
 """
 import uuid
 from datetime import datetime, timezone
-from firebase.firebase_admin import db
+from firebase.firebase_admin import get_db
+
+
+def _db():
+    return get_db()
+
+
+def _session_doc(session_id: str):
+    return _db().collection("sessions").document(session_id)
+
+
+def _set_subdocument(session_id: str, collection: str, document_id: str, payload: dict) -> None:
+    _session_doc(session_id).collection(collection).document(document_id).set(payload)
+
+
+def _get_subdocument(session_id: str, collection: str, document_id: str) -> dict:
+    doc = _session_doc(session_id).collection(collection).document(document_id).get()
+    if doc.exists:
+        return doc.to_dict()
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -35,7 +54,7 @@ def create_session(user_id: str, title: str, city: str, state: str) -> str:
         "created_at": now,
         "updated_at": now,
     }
-    db.collection("sessions").document(session_id).set(session_data)
+    _session_doc(session_id).set(session_data)
     return session_id
 
 
@@ -46,7 +65,7 @@ def get_session(session_id: str) -> dict:
 
     DEV 2 calls this to load context for agent calls.
     """
-    doc = db.collection("sessions").document(session_id).get()
+    doc = _session_doc(session_id).get()
     if doc.exists:
         return doc.to_dict()
     return None
@@ -60,7 +79,7 @@ def update_session(session_id: str, updates: dict) -> None:
     DEV 2 calls this to persist agent outputs.
     """
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
-    db.collection("sessions").document(session_id).update(updates)
+    _session_doc(session_id).update(updates)
 
 
 # ---------------------------------------------------------------------------
@@ -73,7 +92,7 @@ def save_behavioral_intake(session_id: str, answers: list) -> None:
     """
     for answer in answers:
         q_id = str(answer.get("question_id", uuid.uuid4()))
-        db.collection("sessions").document(session_id) \
+        _session_doc(session_id) \
           .collection("behavioral_intake").document(q_id).set(answer)
 
     update_session(session_id, {"status": "behavioral_done"})
@@ -92,7 +111,7 @@ def get_behavioral_intake(session_id: str) -> dict:
             "answers": List[dict]   # each dict matches BehavioralAnswer schema
         }
     """
-    docs = db.collection("sessions").document(session_id) \
+    docs = _session_doc(session_id) \
              .collection("behavioral_intake").stream()
     answers = []
     for doc in docs:
@@ -108,8 +127,7 @@ def save_financial_inputs(session_id: str, inputs: dict) -> None:
     """
     Saves the financial input form data under the session.
     """
-    db.collection("sessions").document(session_id) \
-      .collection("financial_inputs").document("latest").set(inputs)
+    _set_subdocument(session_id, "financial_inputs", "latest", inputs)
 
     # Also update the session-level metadata for history listing
     update_session(session_id, {
@@ -128,8 +146,7 @@ def save_simulation_results(session_id: str, results: dict) -> None:
     Saves all deterministic agent outputs under the session.
     results must contain: financial_reality, all_scenarios, risk_score, india_cost_breakdown
     """
-    db.collection("sessions").document(session_id) \
-      .collection("simulation_results").document("latest").set(results)
+    _set_subdocument(session_id, "simulation_results", "latest", results)
 
     # Update session-level risk label for history listing
     risk_label = None
@@ -159,7 +176,7 @@ def save_discussion_message(session_id: str, message: dict) -> None:
                 "directed_at": str | None
             }
     """
-    db.collection("sessions").document(session_id) \
+    _session_doc(session_id) \
       .collection("discussion_transcript").add(message)
 
 
@@ -172,14 +189,28 @@ def save_verdict(session_id: str, verdict: dict) -> None:
     Saves the final verdict under the session.
     DEV 2 calls this after the Decision Synthesizer produces the verdict.
     """
-    db.collection("sessions").document(session_id) \
-      .collection("verdict").document("latest").set(verdict)
+    _set_subdocument(session_id, "verdict", "latest", verdict)
 
     # Update session-level summary
     update_session(session_id, {
         "status": "completed",
         "verdict_summary": verdict.get("final_narrative", "")[:200],
     })
+
+
+def get_verdict(session_id: str) -> dict:
+    """Returns the persisted verdict if one exists."""
+    return _get_subdocument(session_id, "verdict", "latest")
+
+
+def save_presentation(session_id: str, presentation: dict) -> None:
+    """Persists the final presentation payload used by the PDF/report routes."""
+    _set_subdocument(session_id, "presentation", "latest", presentation)
+
+
+def get_presentation(session_id: str) -> dict:
+    """Returns the persisted presentation if one exists."""
+    return _get_subdocument(session_id, "presentation", "latest")
 
 
 # ---------------------------------------------------------------------------
@@ -191,7 +222,7 @@ def get_session_history(user_id: str) -> list:
     Returns a list of session summaries for a user, most recent first.
     """
     docs = (
-        db.collection("sessions")
+        _db().collection("sessions")
         .where("user_id", "==", user_id)
         .order_by("created_at", direction="DESCENDING")
         .stream()
@@ -209,26 +240,3 @@ def get_session_history(user_id: str) -> list:
             "city": data.get("city"),
         })
     return sessions
-
-
-# ---------------------------------------------------------------------------
-# Report persistence
-# ---------------------------------------------------------------------------
-
-def save_report_url(session_id: str, gcs_url: str) -> None:
-    """Saves the signed GCS URL for a generated PDF report."""
-    now = datetime.now(timezone.utc).isoformat()
-    db.collection("sessions").document(session_id) \
-      .collection("reports").document("latest").set({
-          "gcs_url": gcs_url,
-          "generated_at": now,
-      })
-
-
-def get_report_url(session_id: str) -> str:
-    """Returns the stored report URL if one exists, else None."""
-    doc = db.collection("sessions").document(session_id) \
-        .collection("reports").document("latest").get()
-    if doc.exists:
-        return doc.to_dict().get("gcs_url")
-    return None

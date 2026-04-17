@@ -42,6 +42,8 @@ def calculate_affordability(user_input: UserInput) -> FinancialRealityOutput:
     Calculates the complete financial reality of a home purchase.
     Pure math. Zero LLM involvement. Deterministic.
     """
+    annual_income = user_input.annual_income or (user_input.monthly_income * 12)
+
     # --- India cost breakdown ---
     loan_amount = user_input.property_price - user_input.down_payment
     if loan_amount < 0:
@@ -53,6 +55,8 @@ def calculate_affordability(user_input: UserInput) -> FinancialRealityOutput:
         property_type=user_input.property_type.value,
         loan_amount=loan_amount,
         area_sqft=user_input.area_sqft if user_input.area_sqft else 1000,
+        annual_income=annual_income,
+        tenure_years=user_input.tenure_years,
     )
 
     # --- EMI calculation ---
