@@ -24,6 +24,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datetime import datetime
 from dataclasses import dataclass
+from typing import Optional
 
 from agents.base_agent import BaseAgent
 from schemas.schemas import RoundSummary, AgentMessage, MessageType
@@ -95,7 +96,7 @@ class ConvergenceChecker(BaseAgent):
         self,
         current_round: int,
         round_messages: list
-    ) -> RoundSummary | None:
+    ) -> Optional[RoundSummary]:
         """
         Check obvious convergence or non-convergence cases without calling the LLM.
         Returns a RoundSummary if the answer is clear, None if the LLM should decide.
