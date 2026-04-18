@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 
 from firebase.firebase_admin import initialize_firebase
@@ -271,6 +271,72 @@ async def analyze_route(
 
 
 # ---------------------------------------------------------------------------
+# Brochure analyzer — multimodal property detail extraction
+# ---------------------------------------------------------------------------
+
+@app.post("/analyze/brochure/{session_id}", response_model=APIResponse)
+async def analyze_brochure_route(
+    session_id: str,
+    file: UploadFile = File(...),
+    uid: str = Depends(verify_token),
+):
+    """
+    Accepts a property brochure image or PDF upload.
+    Uses Gemini Vision to extract property details and returns them
+    as structured data that the frontend uses to pre-fill the financial form.
+
+    Supported formats: JPEG, PNG, WebP, PDF
+    Maximum file size: 10MB
+
+    Dev 3 calls this when the user clicks Upload Brochure on the dashboard.
+    The returned fields map directly to the UserInput schema field names.
+    """
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.get("user_id") != uid:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    allowed_types = {
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/heic",
+        "application/pdf"
+    }
+
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type: {file.content_type}. Please upload JPEG, PNG, WebP, or PDF."
+        )
+
+    file_bytes = await file.read()
+
+    if len(file_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(
+            status_code=400,
+            detail="File too large. Maximum size is 10MB."
+        )
+
+    try:
+        from agents.ai_reasoning.brochure_analyzer import BrochureAnalyzerAgent
+        analyzer = BrochureAnalyzerAgent()
+        result = await analyzer.analyze(file_bytes, file.content_type)
+
+        return APIResponse(
+            success=True,
+            message="Brochure analyzed successfully",
+            data=result
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Brochure analysis failed: {str(e)}"
+        )
+
+
+# ---------------------------------------------------------------------------
 # Conversation — follow-up turns
 # ---------------------------------------------------------------------------
 
@@ -403,15 +469,15 @@ async def get_report_route(session_id: str, uid: str = Depends(verify_token)):
         .collection("verdict").document("latest").get()
 
     if not verdict_doc.exists:
-        raise HTTPException(status_code=400, detail="Analysis not complete. Run /analyze and roundtable first.")
+        raise HTTPException(
+            status_code=400,
+            detail="Analysis not complete. Run /analyze and roundtable first."
+        )
 
     try:
         verdict_data = verdict_doc.to_dict()
         verdict_output = VerdictOutput(**verdict_data)
 
-        # Get presentation from session (set by orchestrator)
-        # The orchestrator stores presentation in the blackboard
-        # For PDF we need it — check if it's available in session
         session_data = get_session(session_id)
         if not session_data:
             raise HTTPException(status_code=404, detail="Session not found")
@@ -446,6 +512,99 @@ async def get_report_route(session_id: str, uid: str = Depends(verify_token)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# WebSocket test route — REMOVE BEFORE SUBMISSION
+# This is a dev-only unauthenticated route for testing the roundtable locally.
+# ---------------------------------------------------------------------------
+
+@app.websocket("/ws-test")
+async def roundtable_test_ws(websocket: WebSocket):
+    await websocket.accept()
+    if not orchestrator:
+        await websocket.send_text(json.dumps({
+            "type": "error",
+            "message": "Orchestrator not ready",
+            "recoverable": False
+        }))
+        await websocket.close()
+        return
+
+    # Seed test session if not already in memory
+    if "ws_test_session" not in orchestrator._blackboards:
+        from schemas.schemas import UserInput, PropertyType, BehavioralIntake, BehavioralAnswer
+        from engines.india_defaults import calculate_true_total_cost
+        from agents.deterministic.financial_reality import calculate_affordability
+        from agents.deterministic.scenario_simulation import run_all_scenarios
+        from agents.deterministic.risk_scorer import calculate_risk_score
+
+        user_input = UserInput(
+            monthly_income=150000,
+            monthly_expenses=60000,
+            total_savings=1500000,
+            down_payment=1500000,
+            property_price=8000000,
+            tenure_years=20,
+            annual_interest_rate=0.085,
+            age=32,
+            state="maharashtra",
+            property_type=PropertyType.READY_TO_MOVE,
+            area_sqft=850,
+            session_id="ws_test_session"
+        )
+
+        india_costs = calculate_true_total_cost(
+            base_price=user_input.property_price,
+            state=user_input.state,
+            property_type=user_input.property_type.value,
+            loan_amount=user_input.property_price - user_input.down_payment,
+            area_sqft=user_input.area_sqft
+        )
+        financial = calculate_affordability(user_input)
+        scenarios = run_all_scenarios(user_input, financial)
+        risk = calculate_risk_score(financial, scenarios, user_input.age, user_input.tenure_years)
+
+        behavioral_intake = BehavioralIntake(
+            session_id="ws_test_session",
+            answers=[
+                BehavioralAnswer(
+                    question_id=1,
+                    question="Are you feeling time pressure to buy?",
+                    answer="Yes, prices are rising fast",
+                    bias_signal="FOMO"
+                ),
+                BehavioralAnswer(
+                    question_id=2,
+                    question="Have you already emotionally committed to a specific property?",
+                    answer="Yes, we really love this apartment",
+                    bias_signal="anchoring"
+                )
+            ]
+        )
+
+        deterministic_results = {
+            "india_cost_breakdown": india_costs.model_dump(),
+            "financial_reality": financial.model_dump(),
+            "all_scenarios": scenarios.model_dump(),
+            "risk_score": risk.model_dump()
+        }
+
+        await orchestrator.analyze(
+            session_id="ws_test_session",
+            user_input=user_input,
+            behavioral_intake=behavioral_intake,
+            deterministic_results=deterministic_results
+        )
+
+    try:
+        await orchestrator.run_roundtable("ws_test_session", websocket)
+    except Exception as e:
+        await websocket.send_text(json.dumps({
+            "type": "error",
+            "message": str(e),
+            "recoverable": False
+        }))
 
 
 # ---------------------------------------------------------------------------

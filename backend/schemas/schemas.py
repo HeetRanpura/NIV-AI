@@ -1,10 +1,32 @@
+"""
+schemas.py — All Pydantic models for NIV AI.
+
+VerdictOutput has been extended with 6 specialist audit domain fields:
+    financial_audit   — financial analyst depth: EMI sensitivity, opportunity cost,
+                        break-even, net worth impact, total interest burden
+    risk_audit        — risk strategist depth: all 5 scenarios quantified, sector
+                        job risk, medical emergency cost, concentration risk
+    legal_audit       — property lawyer depth: title, RERA, OC, encumbrance,
+                        agreement clauses, stamp duty compliance
+    banking_audit     — loan specialist depth: multi-lender comparison, FOIR,
+                        prepayment strategy, PMAY eligibility, co-applicant benefit
+    tax_audit         — CA depth: Section 24B, 80C, joint loan optimization,
+                        effective post-tax EMI, capital gains on future sale
+    behavioral_audit  — behavioral economist depth: each bias mapped to rupee
+                        impact, decision quality recommendations, cooling-off advice
+
+All existing fields are unchanged so no other files break.
+"""
+
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from enum import Enum
 from datetime import datetime
 
 
+# -----------------------------------------------------------------------------
 # Enums
+# -----------------------------------------------------------------------------
 
 class AffordabilityStatus(str, Enum):
     COMFORTABLE = "comfortable"
@@ -78,7 +100,9 @@ class PropertyType(str, Enum):
     READY_TO_MOVE = "ready_to_move"
 
 
+# -----------------------------------------------------------------------------
 # Input models
+# -----------------------------------------------------------------------------
 
 class UserInput(BaseModel):
     # Monthly income after tax in rupees
@@ -129,7 +153,9 @@ class ConversationMessage(BaseModel):
     message: str
 
 
+# -----------------------------------------------------------------------------
 # India defaults output
+# -----------------------------------------------------------------------------
 
 class IndiaCostBreakdown(BaseModel):
     base_price: float
@@ -142,13 +168,15 @@ class IndiaCostBreakdown(BaseModel):
     loan_processing_fee: float
     legal_charges: float
     true_total_cost: float
-    # Annual tax benefit under 80C on principal
+    # Annual tax benefit under Section 80C on principal repayment
     tax_benefit_80c: float
-    # Annual tax benefit under 24B on interest
+    # Annual tax benefit under Section 24B on interest payment
     tax_benefit_24b: float
 
 
+# -----------------------------------------------------------------------------
 # Deterministic agent outputs
+# -----------------------------------------------------------------------------
 
 class FinancialRealityOutput(BaseModel):
     emi: float
@@ -214,14 +242,16 @@ class RiskScoreOutput(BaseModel):
     score_explanation: Dict[str, str]
 
 
+# -----------------------------------------------------------------------------
 # AI agent outputs
+# -----------------------------------------------------------------------------
 
 class BiasFlagItem(BaseModel):
     bias_type: BiasType
     severity: BiasSeverity
     # What specific input triggered this flag
     evidence: str
-    # What financial risk does this bias create
+    # What financial risk does this bias create, including rupee impact
     implication: str
 
 
@@ -237,19 +267,69 @@ class BehavioralAnalysisOutput(BaseModel):
     emotionally_committed: bool
 
 
+# -----------------------------------------------------------------------------
+# VerdictOutput — extended with 6 specialist audit domain fields
+#
+# Each audit field is a detailed string written at specialist depth.
+# They default to empty string so existing code that creates VerdictOutput
+# without these fields will not break.
+# -----------------------------------------------------------------------------
+
 class VerdictOutput(BaseModel):
+    # Core verdict fields — unchanged from original
     verdict: Verdict
-    # Confidence in this verdict from 0 to 100
     confidence: float
     primary_reasons: List[str]
     key_warnings: List[str]
     safe_price_recommendation: float
     suggested_actions: List[str]
-    # Conflicts from validation agent that could not be resolved
     unresolved_conflicts: List[str]
-    # 2 to 3 paragraph narrative written directly to the user
     final_narrative: str
 
+    # Executive summary — one paragraph overview before the domain sections
+    audit_summary: str = ""
+
+    # Domain 1 — Financial Analyst
+    # Covers: true affordability, EMI sensitivity at multiple rates, total interest
+    # burden, opportunity cost of down payment, net worth concentration,
+    # break-even vs renting analysis
+    financial_audit: str = ""
+
+    # Domain 2 — Risk Strategist
+    # Covers: all 5 stress scenarios quantified with exact rupee shortfalls and
+    # month of failure, sector-specific job loss probability, medical emergency
+    # cost trajectory at 14% healthcare inflation, interest rate shock history,
+    # emergency fund adequacy, concentration risk
+    risk_audit: str = ""
+
+    # Domain 3 — Legal Advisory
+    # Covers: title verification checklist, RERA registration status, occupancy
+    # certificate, encumbrance certificate, agreement to sale clauses, builder
+    # complaint history, stamp duty compliance, force majeure risk
+    legal_audit: str = ""
+
+    # Domain 4 — Banking and Loan Specialist
+    # Covers: loan eligibility across lenders, fixed vs floating analysis,
+    # FOIR calculation, prepayment strategy and interest savings, PMAY
+    # subsidy eligibility, co-applicant tax benefit structure
+    banking_audit: str = ""
+
+    # Domain 5 — Tax Advisor (CA level)
+    # Covers: Section 24B interest deduction, Section 80C principal deduction,
+    # joint loan optimization, effective post-tax EMI, 20-year total tax saving,
+    # capital gains on future sale, rental income taxation
+    tax_audit: str = ""
+
+    # Domain 6 — Behavioral Economist
+    # Covers: each detected bias mapped to exact rupee impact, FOMO overpayment
+    # risk, emotional commitment cost, optimism bias income projection gap,
+    # anchoring to asking price, decision quality recommendations
+    behavioral_audit: str = ""
+
+
+# -----------------------------------------------------------------------------
+# Presentation and chart models
+# -----------------------------------------------------------------------------
 
 class ChartDataset(BaseModel):
     label: str
@@ -322,7 +402,9 @@ class PresentationOutput(BaseModel):
     pdf_content: PDFContent
 
 
+# -----------------------------------------------------------------------------
 # Validation agent outputs
+# -----------------------------------------------------------------------------
 
 class AssumptionItem(BaseModel):
     assumption: str
@@ -348,7 +430,9 @@ class ValidationOutput(BaseModel):
     data_quality_score: float
 
 
+# -----------------------------------------------------------------------------
 # Context and conversation outputs
+# -----------------------------------------------------------------------------
 
 class ContextState(BaseModel):
     session_id: str
@@ -377,7 +461,9 @@ class ConversationOutput(BaseModel):
     response_to_user: str
 
 
+# -----------------------------------------------------------------------------
 # Roundtable models
+# -----------------------------------------------------------------------------
 
 class AgentMessage(BaseModel):
     agent: str
@@ -422,7 +508,9 @@ class BlackboardState(BaseModel):
     converged: bool = False
 
 
+# -----------------------------------------------------------------------------
 # Session models
+# -----------------------------------------------------------------------------
 
 class SessionState(BaseModel):
     session_id: str
@@ -447,7 +535,9 @@ class SessionSummary(BaseModel):
     city: Optional[str] = None
 
 
+# -----------------------------------------------------------------------------
 # Report models
+# -----------------------------------------------------------------------------
 
 class ReportOutput(BaseModel):
     session_id: str
@@ -456,7 +546,9 @@ class ReportOutput(BaseModel):
     generated_at: str
 
 
+# -----------------------------------------------------------------------------
 # API response wrappers
+# -----------------------------------------------------------------------------
 
 class APIResponse(BaseModel):
     success: bool
