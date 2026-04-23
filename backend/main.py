@@ -48,6 +48,8 @@ from agents.deterministic.scenario_simulation import run_all_scenarios
 from agents.deterministic.risk_scorer import calculate_risk_score
 from engines.pdf_generator import generate_pdf
 from storage.gcs_client import upload_pdf
+# Headless compute engine (PR: headless-calculate-endpoint)
+from engines.compute import compute_all
 
 
 # ---------------------------------------------------------------------------
@@ -100,6 +102,29 @@ async def startup_event():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "niv-ai-home-buying-advisor", "version": "1.0.0"}
+
+
+# ---------------------------------------------------------------------------
+# Headless calculate — pure math, no LLM, no auth required
+# ---------------------------------------------------------------------------
+
+@app.post("/api/v1/calculate", response_model=APIResponse)
+async def calculate_route(user_input: UserInput):
+    """
+    Headless deterministic calculation endpoint.
+    Runs all math agents and returns the bundled result.
+    No auth required — pure math, zero API budget cost.
+    Designed for frontend real-time sliders. Target: < 50ms.
+    """
+    try:
+        result = compute_all(user_input)
+        return APIResponse(
+            success=True,
+            message="Calculation complete",
+            data=result.model_dump(),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Calculation failed: {str(e)}")
 
 
 # ---------------------------------------------------------------------------

@@ -577,3 +577,15 @@ class ConversationResponse(BaseModel):
     session_id: str
     conversation_output: ConversationOutput
     updated_analysis: Optional[AnalysisResponse] = None
+
+
+# -----------------------------------------------------------------------------
+# Headless compute engine output (PR: headless-calculate-endpoint)
+# -----------------------------------------------------------------------------
+
+class ComputeAllOutput(BaseModel):
+    """Bundled output of all deterministic calculations — no LLM involved."""
+    india_cost_breakdown: IndiaCostBreakdown
+    financial_reality: FinancialRealityOutput
+    all_scenarios: AllScenariosOutput
+    risk_score: RiskScoreOutput
