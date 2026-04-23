@@ -96,8 +96,20 @@ class BehavioralAnalysisAgent(BaseAgent):
         true_total_cost = india_cost_breakdown.get("true_total_cost", property_price)
         cost_gap = true_total_cost - total_savings
 
+        # Wrap user-provided free-text answers in XML delimiters to prevent
+        # prompt injection. The question and bias_signal fields are system-
+        # controlled so only the answer field needs sandboxing.
+        sanitized_answers = []
+        for answer in behavioral_answers:
+            sanitized = dict(answer)
+            if "answer" in sanitized:
+                sanitized["answer"] = (
+                    f"<buyer_notes>{sanitized['answer']}</buyer_notes>"
+                )
+            sanitized_answers.append(sanitized)
+
         return {
-            "behavioral_answers": behavioral_answers,
+            "behavioral_answers": sanitized_answers,
             "financial_inputs": {
                 "monthly_income": monthly_income,
                 "monthly_expenses": monthly_expenses,

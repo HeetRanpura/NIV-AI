@@ -47,9 +47,10 @@ class ConversationAgent(BaseAgent):
         return self._parse_output(raw)
 
     def _build_context(self, message: str, blackboard: dict) -> dict:
-        # Only pass current inputs and risk score so agent understands current state
+        # Only pass current inputs and risk score so agent understands current state.
+        # Wrap user-provided free-text in XML delimiters to prevent prompt injection.
         return {
-            "user_message": message,
+            "user_message": f"<buyer_notes>{message}</buyer_notes>",
             "current_inputs": self.extract_blackboard_context(
                 blackboard, ["user_input", "risk_score"]
             ),
