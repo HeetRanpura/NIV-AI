@@ -1356,12 +1356,40 @@ hr.divider {
           <label for="f-ptype">Property Type<span class="req">*</span></label>
           <select id="f-ptype" aria-label="Select property type">
             <option value="">— Select Type —</option>
-            <option value="under_construction">Under Construction (GST: 5%)</option>
-            <option value="ready_to_move">Ready to Move (No GST)</option>
-            <option value="resale">Resale (No GST)</option>
-            <option value="plot">Plot / Land</option>
+            <option value="under_construction">Under Construction</option>
+            <option value="ready_to_move">Ready to Move</option>
           </select>
-          <div class="hint">Affects GST applicability</div>
+          <div class="hint">GST auto-classified by price &amp; area</div>
+        </div>
+      </div>
+
+      <div class="form-section-label">🔬 Advanced Parameters <span style="font-size:0.65rem;color:#888;font-weight:400">(Optional — unlock institutional-grade analysis)</span></div>
+      <div class="form-grid-2col">
+        <div class="form-field">
+          <label for="f-district">District</label>
+          <input type="text" id="f-district" placeholder="e.g. mumbai_city, pune, bengaluru_urban" aria-label="Specific district for precise stamp duty rates">
+          <div class="hint">Enables district-level stamp duty (overrides state flat rate)</div>
+        </div>
+        <div class="form-field">
+          <label for="f-area-sqm">Carpet Area (sq metres)</label>
+          <input type="number" id="f-area-sqm" placeholder="e.g. 72" min="1" step="0.5" aria-label="Carpet area in square metres for GST classification">
+          <div class="hint">Required to classify affordable housing GST (≤90 sqm + ≤₹45L = 1% GST)</div>
+        </div>
+        <div class="form-field">
+          <label for="f-existing-emi">Existing EMI Obligations (₹/month)</label>
+          <input type="number" id="f-existing-emi" placeholder="e.g. 15000" min="0" step="1000" aria-label="All existing EMIs per month for FOIR calculation">
+          <div class="hint">Car loans, personal loans, credit card EMIs — used for FOIR underwriting check</div>
+        </div>
+        <div class="form-field">
+          <label for="f-construction-year">Building Construction Year</label>
+          <input type="number" id="f-construction-year" placeholder="e.g. 2005" min="1900" max="2025" step="1" aria-label="Year building was constructed for depreciation analysis">
+          <div class="hint">For resale — triggers structural life &amp; LTV risk assessment</div>
+        </div>
+      </div>
+      <div class="form-grid-3col">
+        <div class="form-field" style="display:flex;align-items:center;gap:10px;padding-top:16px">
+          <input type="checkbox" id="f-female-buyer" aria-label="Check if primary buyer is female for stamp duty concession" style="width:18px;height:18px;cursor:pointer">
+          <label for="f-female-buyer" style="margin:0;cursor:pointer">Female Buyer <span style="font-size:0.6rem;color:#888">(1% stamp duty concession)</span></label>
         </div>
       </div>
 
@@ -1510,20 +1538,42 @@ hr.divider {
               <div class="stat-row"><span class="stat-label">EMI / Income Ratio</span><span class="stat-val" id="v-emi-ratio">—</span></div>
               <div class="stat-row"><span class="stat-label">Monthly Surplus</span><span class="stat-val" id="v-surplus">—</span></div>
               <div class="stat-row"><span class="stat-label">Loan Amount</span><span class="stat-val" id="v-loan">—</span></div>
+              <div class="stat-row"><span class="stat-label">FOIR (Total Debt / Income)</span><span class="stat-val" id="v-foir">—</span></div>
             </div>
             <div id="v-afford-badge" style="margin-top:8px"></div>
+            <!-- FOIR breach alert -->
+            <div id="v-foir-alert" style="display:none;margin-top:10px;padding:10px 12px;background:#fef2f2;border-left:4px solid #ef4444;font-size:0.62rem;line-height:1.6;color:#7f1d1d"></div>
           </div>
         </div>
 
         <!-- Hidden Costs -->
         <div class="v-panel">
-          <div class="v-panel-head">Hidden Cost Breakdown <span class="panel-tag">TRUE COST</span></div>
+          <div class="v-panel-head">True Cost of Ownership <span class="panel-tag">HIDDEN FEE AGGREGATOR</span></div>
           <div class="v-panel-body">
             <div class="ledger-row"><span class="ledger-label">Base Price</span><span class="ledger-val" id="v-base">—</span></div>
-            <div class="ledger-row"><span class="ledger-label">GST</span><span class="ledger-val negative" id="v-gst">—</span></div>
-            <div class="ledger-row"><span class="ledger-label">Stamp Duty</span><span class="ledger-val negative" id="v-stamp">—</span></div>
-            <div class="ledger-row"><span class="ledger-label">Registration</span><span class="ledger-val negative" id="v-reg">—</span></div>
+            <div class="ledger-row"><span class="ledger-label" id="v-gst-label">GST</span><span class="ledger-val negative" id="v-gst">—</span></div>
+            <div class="ledger-row"><span class="ledger-label" id="v-stamp-label">Stamp Duty</span><span class="ledger-val negative" id="v-stamp">—</span></div>
+            <div class="ledger-row"><span class="ledger-label">Registration Fee</span><span class="ledger-val negative" id="v-reg">—</span></div>
+            <div class="ledger-row"><span class="ledger-label">Bank Processing Fee</span><span class="ledger-val negative" id="v-bank-fee">—</span></div>
+            <div class="ledger-row"><span class="ledger-label">Legal Verification Fee</span><span class="ledger-val negative" id="v-legal-fee">—</span></div>
+            <div class="ledger-row"><span class="ledger-label">Maintenance Deposit</span><span class="ledger-val negative" id="v-maint">—</span></div>
+            <div class="ledger-row" style="border-top:1px dashed #ddd;margin-top:4px;padding-top:6px">
+              <span class="ledger-label" style="color:#888;font-size:0.58rem">📌 Annual Property Tax (recurring)</span>
+              <span class="ledger-val" id="v-prop-tax" style="color:#888;font-size:0.65rem">—</span>
+            </div>
             <div class="ledger-row total-row"><span class="ledger-label">Total Acquisition Cost</span><span class="ledger-val total-final" id="v-total">—</span></div>
+          </div>
+        </div>
+
+        <!-- Building Age / Depreciation Alert -->
+        <div id="v-age-panel" class="v-panel" style="display:none">
+          <div class="v-panel-head" style="background:#92400e">Building Age Risk <span class="panel-tag" style="background:#b45309">🏗️ STRUCTURAL DEPRECIATION</span></div>
+          <div class="v-panel-body">
+            <div class="stat-block">
+              <div class="stat-row"><span class="stat-label">Structural Life Remaining</span><span class="stat-val" id="v-struct-life">—</span></div>
+              <div class="stat-row"><span class="stat-label">Bank Max LTV</span><span class="stat-val warn" id="v-ltv">—</span></div>
+            </div>
+            <div id="v-age-warning" style="margin-top:10px;padding:10px 12px;background:#fffbeb;border-left:4px solid #b45309;font-size:0.62rem;line-height:1.6;color:#92400e"></div>
           </div>
         </div>
 
@@ -1949,16 +1999,24 @@ async function submitBehavioral(answer) {
 
 function getFormValues() {
   return {
-    monthly_income:       parseFloat(document.getElementById('f-income').value) || null,
-    monthly_expenses:     parseFloat(document.getElementById('f-expenses').value) || null,
-    total_savings:        parseFloat(document.getElementById('f-savings').value) || null,
-    property_price:       parseFloat(document.getElementById('f-price').value) || null,
-    down_payment:         parseFloat(document.getElementById('f-down').value) || null,
-    tenure_years:         parseInt(document.getElementById('f-tenure').value) || null,
-    annual_interest_rate: parseFloat(document.getElementById('f-rate').value) || null,
-    age:                  parseInt(document.getElementById('f-age').value) || null,
-    state:                document.getElementById('f-state').value || null,
-    property_type:        document.getElementById('f-ptype').value || null,
+    monthly_income:           parseFloat(document.getElementById('f-income').value) || null,
+    monthly_expenses:         parseFloat(document.getElementById('f-expenses').value) || null,
+    total_savings:            parseFloat(document.getElementById('f-savings').value) || null,
+    property_price:           parseFloat(document.getElementById('f-price').value) || null,
+    down_payment:             parseFloat(document.getElementById('f-down').value) || null,
+    tenure_years:             parseInt(document.getElementById('f-tenure').value) || null,
+    annual_interest_rate:     parseFloat(document.getElementById('f-rate').value) || null,
+    age:                      parseInt(document.getElementById('f-age').value) || null,
+    state:                    document.getElementById('f-state').value || null,
+    property_type:            document.getElementById('f-ptype').value || null,
+    // Feature 1 & 2: GST + District stamp duty
+    area_sqm:                 parseFloat(document.getElementById('f-area-sqm').value) || null,
+    district:                 document.getElementById('f-district').value.trim() || null,
+    is_female_buyer:          document.getElementById('f-female-buyer').checked,
+    // Feature 3: FOIR
+    existing_emi_obligations: parseFloat(document.getElementById('f-existing-emi').value) || 0,
+    // Feature 5: Property Age
+    construction_year:        parseInt(document.getElementById('f-construction-year').value) || null,
   };
 }
 
@@ -2554,9 +2612,9 @@ function renderVerdict() {
   if (!r) { showToast('No analysis results available'); return; }
 
   const fr  = r.financial_reality || {};
-  const hc  = r.hidden_costs      || {};
-  const ra  = r.risk_assessment   || {};
-  const v   = r.verdict           || {};
+  const hc  = (fr.india_cost_breakdown) || r.hidden_costs || {};
+  const ra  = r.risk_score || r.risk_assessment || {};
+  const v   = r.verdict    || {};
   const now = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
 
   // Meta
@@ -2564,9 +2622,10 @@ function renderVerdict() {
 
   // Verdict badge
   const badge    = document.getElementById('v-go-badge');
-  const decision = v.decision || '—';
-  badge.className = `go-badge ${decision === 'GO' ? 'go' : 'nogo'}`;
-  badge.innerHTML = `${decision}<span class="go-sub">${decision === 'GO' ? 'PROCEED WITH CAUTION' : 'AVOID COMMITMENT'}</span>`;
+  const decision = v.decision || (v.verdict ? v.verdict.toUpperCase() : '—');
+  const isGo     = decision === 'GO' || decision === 'BUY_SAFE' || decision === 'BUY_CAUTION';
+  badge.className = `go-badge ${isGo ? 'go' : 'nogo'}`;
+  badge.innerHTML = `${isGo ? 'GO' : 'NO-GO'}<span class="go-sub">${isGo ? 'PROCEED WITH CAUTION' : 'AVOID COMMITMENT'}</span>`;
 
   // Confidence
   const conf = v.confidence || 0;
@@ -2574,54 +2633,108 @@ function renderVerdict() {
   setTimeout(() => { document.getElementById('v-conf-bar').style.width = (conf * 100) + '%'; }, 200);
 
   // Reasoning
-  document.getElementById('v-reasoning').innerHTML = `<strong>Analysis Summary:</strong> ${v.reasoning || 'No reasoning provided.'}`;
+  document.getElementById('v-reasoning').innerHTML = `<strong>Analysis Summary:</strong> ${v.final_narrative || v.reasoning || 'No reasoning provided.'}`;
 
-  // Financial Reality
+  // ── Financial Reality ──
   document.getElementById('v-emi').textContent = fmt(fr.emi);
   const emiRatio = fr.emi_to_income_ratio || 0;
   const ratioEl  = document.getElementById('v-emi-ratio');
   ratioEl.textContent = (emiRatio * 100).toFixed(1) + '%';
   ratioEl.className   = 'stat-val ' + (emiRatio > 0.4 ? 'warn' : emiRatio > 0.3 ? 'ok' : 'safe');
-  const surplus   = fr.monthly_surplus || 0;
+  const surplus   = fr.monthly_surplus_after_emi || fr.monthly_surplus || 0;
   const surplusEl = document.getElementById('v-surplus');
   surplusEl.textContent = fmt(surplus);
   surplusEl.className   = 'stat-val ' + (surplus < 0 ? 'warn' : 'safe');
   document.getElementById('v-loan').textContent = fmt(fr.loan_amount);
 
+  // Feature 3: FOIR
+  const foirEl = document.getElementById('v-foir');
+  if (fr.foir_ratio !== undefined) {
+    const foirPct = (fr.foir_ratio * 100).toFixed(1) + '%';
+    foirEl.textContent  = foirPct + (fr.foir_breach ? ' ⚠' : '');
+    foirEl.className    = 'stat-val ' + (fr.foir_breach ? 'warn' : fr.foir_ratio > 0.40 ? 'ok' : 'safe');
+    const alertEl = document.getElementById('v-foir-alert');
+    if (fr.foir_breach && fr.foir_warning) {
+      alertEl.style.display = 'block';
+      alertEl.innerHTML = `<strong>⚠ FOIR Breach — Bank Rejection Risk:</strong><br>${fr.foir_warning}`;
+    } else {
+      alertEl.style.display = 'none';
+    }
+  }
+
   const affordStatus = (fr.affordability_status || '').toUpperCase();
-  const affordClass  = affordStatus === 'AFFORDABLE' ? 'affordable' : affordStatus === 'STRETCHED' ? 'stretched' : 'unaffordable';
+  const affordClass  = affordStatus === 'COMFORTABLE' ? 'affordable' : affordStatus === 'STRETCHED' ? 'stretched' : 'unaffordable';
   document.getElementById('v-afford-badge').innerHTML = `<span class="affordability-badge ${affordClass}">${affordStatus || '—'}</span>`;
 
-  // Hidden Costs
-  document.getElementById('v-base').textContent  = fmt(hc.base_price || hc.property_price);
-  document.getElementById('v-gst').textContent   = fmt(hc.gst);
-  document.getElementById('v-stamp').textContent = fmt(hc.stamp_duty);
-  document.getElementById('v-reg').textContent   = fmt(hc.registration);
-  document.getElementById('v-total').textContent = fmt(hc.total_cost);
+  // ── Feature 1: GST Slab label ──
+  const gstLabelEl = document.getElementById('v-gst-label');
+  if (hc.gst_slab) {
+    const slabMap = { exempt: 'GST (0% — Ready to Move)', affordable_1pct: 'GST (1% — Affordable Housing)', standard_5pct: 'GST (5% — Under Construction)' };
+    gstLabelEl.textContent = slabMap[hc.gst_slab] || 'GST';
+  }
 
-  // Risk Score
-  const score    = ra.composite_score || 0;
-  const riskLabel = (ra.risk_label || 'MEDIUM').toLowerCase();
+  // ── Feature 2: Stamp Duty label with female concession ──
+  const stampLabelEl = document.getElementById('v-stamp-label');
+  if (stampLabelEl) {
+    const rate = hc.stamp_duty_rate ? ` (${(hc.stamp_duty_rate * 100).toFixed(1)}%)` : '';
+    const concession = hc.female_buyer_concession_applied ? ' ✓ 1% female concession applied' : '';
+    stampLabelEl.textContent = `Stamp Duty${rate}${concession}`;
+  }
+
+  // ── Feature 4: Expanded Hidden Costs ──
+  document.getElementById('v-base').textContent    = fmt(hc.base_price);
+  document.getElementById('v-gst').textContent     = fmt(hc.gst);
+  document.getElementById('v-stamp').textContent   = fmt(hc.stamp_duty);
+  document.getElementById('v-reg').textContent     = fmt(hc.registration_fee || hc.registration);
+  document.getElementById('v-bank-fee').textContent  = fmt(hc.bank_processing_fee);
+  document.getElementById('v-legal-fee').textContent = fmt(hc.legal_verification_fee);
+  document.getElementById('v-maint').textContent   = fmt(hc.maintenance_deposit);
+  document.getElementById('v-prop-tax').textContent  = hc.annual_property_tax ? `${fmt(hc.annual_property_tax)}/yr` : '—';
+  document.getElementById('v-total').textContent   = fmt(hc.true_total_cost || hc.total_cost);
+
+  // ── Feature 5: Building Age / Depreciation ──
+  const agePanel = document.getElementById('v-age-panel');
+  if (fr.ltv_age_risk) {
+    agePanel.style.display = 'block';
+    document.getElementById('v-struct-life').textContent = fr.structural_life_remaining !== null ? `${fr.structural_life_remaining} years` : '—';
+    document.getElementById('v-ltv').textContent = fr.ltv_recommended_pct !== null ? `${(fr.ltv_recommended_pct * 100).toFixed(0)}% Max LTV` : '—';
+    if (fr.age_depreciation_warning) {
+      document.getElementById('v-age-warning').innerHTML = `<strong>🏗️ Structural Depreciation Risk:</strong><br>${fr.age_depreciation_warning}`;
+    }
+  } else {
+    agePanel.style.display = 'none';
+  }
+
+  // ── Risk Score ──
+  const score     = ra.composite_score || 0;
+  const riskLabel = (ra.risk_label || 'MEDIUM').toLowerCase().replace(' ', '_').replace(' risk', '');
+  const riskClass = riskLabel.includes('safe') ? 'low' : riskLabel.includes('moderate') ? 'medium' : 'high';
   const scoreEl   = document.getElementById('v-risk-score');
   scoreEl.textContent = score;
-  scoreEl.className   = `risk-score-display ${riskLabel}`;
-  document.getElementById('v-risk-label').innerHTML = `<span class="risk-label-badge ${riskLabel}">${(ra.risk_label || '—').toUpperCase()} RISK</span>`;
+  scoreEl.className   = `risk-score-display ${riskClass}`;
+  document.getElementById('v-risk-label').innerHTML = `<span class="risk-label-badge ${riskClass}">${(ra.risk_label || '—').toUpperCase()}</span>`;
   const factorsEl = document.getElementById('v-risk-factors');
-  factorsEl.innerHTML = ra.factors?.length
-    ? ra.factors.map(f => `<div class="risk-factor-row"><div class="rf-dot ${f.triggered ? 'triggered' : 'clear'}"></div><span>${f.label}</span></div>`).join('')
+  const factors   = ra.risk_factors || ra.factors;
+  factorsEl.innerHTML = factors?.length
+    ? factors.map(f => {
+        const label     = typeof f === 'string' ? f : (f.label || f.description || JSON.stringify(f));
+        const triggered = typeof f === 'string' ? true : (f.triggered !== false);
+        return `<div class="risk-factor-row"><div class="rf-dot ${triggered ? 'triggered' : 'clear'}"></div><span>${label}</span></div>`;
+      }).join('')
     : '<div style="font-size:0.62rem;color:#888">No factor data.</div>';
 
-  // Scenarios
-  const scenEl = document.getElementById('v-scenarios');
-  scenEl.innerHTML = r.scenarios?.length
-    ? r.scenarios.map(s => {
-        const sev     = (s.severity || 'MODERATE').toUpperCase();
-        const sevClass = sev === 'CRITICAL' ? 'critical' : sev === 'LOW' || sev === 'SAFE' ? 'safe' : 'moderate';
+  // ── Scenarios ──
+  const scenEl   = document.getElementById('v-scenarios');
+  const scenarios = r.all_scenarios ? Object.values(r.all_scenarios).filter(s => s && typeof s === 'object' && 'scenario_name' in s) : r.scenarios;
+  scenEl.innerHTML = scenarios?.length
+    ? scenarios.map(s => {
+        const sev      = (s.severity || 'moderate').toLowerCase();
+        const sevClass = sev === 'critical' ? 'critical' : (sev === 'low') ? 'safe' : 'moderate';
         return `<div class="scenario-card ${sevClass}">
-          <div class="scenario-title">${s.name || 'Scenario'}</div>
+          <div class="scenario-title">${s.scenario_name || s.name || 'Scenario'}</div>
           <div class="scenario-desc">${s.description || ''}</div>
           <div class="scenario-badges">
-            <span class="s-badge">${sev}</span>
+            <span class="s-badge">${sev.toUpperCase()}</span>
             ${s.survivable !== undefined ? `<span class="s-badge">${s.survivable ? '✓ Survivable' : '✗ Critical'}</span>` : ''}
             ${s.buffer_months !== undefined ? `<span class="s-badge">Buffer: ${s.buffer_months} mo.</span>` : ''}
           </div>

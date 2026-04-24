@@ -129,6 +129,19 @@ class UserInput(BaseModel):
     area_sqft: Optional[float] = None
     # Session this input belongs to
     session_id: str
+    # --- Feature 1: GST Auto-Classifier ---
+    # Property carpet area in sq metres (needed for affordable housing GST classification)
+    area_sqm: Optional[float] = None
+    # --- Feature 2: District-Level Stamp Duty ---
+    # Specific district within the state (e.g. 'mumbai_city', 'pune') for exact rates
+    district: Optional[str] = None
+    # True if primary buyer is female (gets 1% concession in most states)
+    is_female_buyer: bool = False
+    # --- Feature 5: Property Age / Depreciation ---
+    # Year the building was constructed (for resale properties)
+    construction_year: Optional[int] = None
+    # Existing loan obligations per month in rupees (for FOIR calculation)
+    existing_emi_obligations: float = 0.0
 
 
 class BehavioralAnswer(BaseModel):
@@ -161,11 +174,21 @@ class IndiaCostBreakdown(BaseModel):
     base_price: float
     stamp_duty: float
     stamp_duty_rate: float
+    # True if female buyer concession was applied
+    female_buyer_concession_applied: bool = False
     registration_fee: float
     gst: float
     gst_applicable: bool
+    # GST classification: 'exempt', 'affordable_1pct', 'standard_5pct'
+    gst_slab: str = "exempt"
     maintenance_deposit: float
     loan_processing_fee: float
+    # Itemised bank processing fee (e.g. SBI 0.35%)
+    bank_processing_fee: float = 0.0
+    # One-time legal / technical verification fee charged by bank
+    legal_verification_fee: float = 0.0
+    # Estimated annual BMC/municipal property tax
+    annual_property_tax: float = 0.0
     legal_charges: float
     true_total_cost: float
     # Annual tax benefit under Section 80C on principal repayment
@@ -194,6 +217,24 @@ class FinancialRealityOutput(BaseModel):
     india_cost_breakdown: IndiaCostBreakdown
     loan_amount: float
     total_interest_payable: float
+    # --- Feature 3: FOIR Underwriting Check ---
+    # Total Fixed Obligation to Income Ratio (EMI + existing obligations / income)
+    foir_ratio: float = 0.0
+    # RBI standard threshold (typically 0.50–0.55)
+    foir_limit: float = 0.50
+    # True if FOIR exceeds limit — bank will likely reject the loan
+    foir_breach: bool = False
+    # Human-readable FOIR warning message
+    foir_warning: Optional[str] = None
+    # --- Feature 5: Property Age / Depreciation ---
+    # Remaining structural life in years (RCC buildings: 60yr lifespan)
+    structural_life_remaining: Optional[int] = None
+    # Recommended max LTV banks will offer based on building age
+    ltv_recommended_pct: Optional[float] = None
+    # True if bank may reduce LTV due to building age
+    ltv_age_risk: bool = False
+    # Human-readable age risk warning
+    age_depreciation_warning: Optional[str] = None
 
 
 class ScenarioOutput(BaseModel):
@@ -577,3 +618,15 @@ class ConversationResponse(BaseModel):
     session_id: str
     conversation_output: ConversationOutput
     updated_analysis: Optional[AnalysisResponse] = None
+
+
+# -----------------------------------------------------------------------------
+# Headless compute engine output (PR: headless-calculate-endpoint)
+# -----------------------------------------------------------------------------
+
+class ComputeAllOutput(BaseModel):
+    """Bundled output of all deterministic calculations — no LLM involved."""
+    india_cost_breakdown: IndiaCostBreakdown
+    financial_reality: FinancialRealityOutput
+    all_scenarios: AllScenariosOutput
+    risk_score: RiskScoreOutput
