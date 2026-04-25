@@ -93,7 +93,7 @@ def _build_computed(body: AnalysisRequest):
 # ---------------------------------------------------------------------------
 
 @router.post("/analyze")
-@limiter.limit("5/10 minutes")
+@limiter.limit("1000/minute")
 async def analyze(request: Request, body: AnalysisRequest):
     """
     Run the full 6-agent analysis pipeline.

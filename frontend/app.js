@@ -113,11 +113,13 @@ let bankEmailReturnPage = 0;
 
 const reportPageDescriptions = [
   'Start with the decision summary, core affordability, and top warning signals.',
-  'Pressure-test the purchase with scenarios, property signals, and rent-vs-buy context.',
-  'Review long-term cost, supporting documents, and action-oriented lender outputs.',
+  'Pressure-test the purchase with scenarios and real-world shock simulations.',
+  'Analyze the physical asset quality, local pricing benchmarks, and rent-vs-buy math.',
+  'Review the true acquisition cost including hidden friction and interior projections.',
   'Understand the reasoning, challenged assumptions, and buyer blind spots behind the verdict.',
-  'Compare alternatives, export the audit, and review data coverage before deciding.'
+  'Compare alternatives, verify documents, and export your full audit report.'
 ];
+
 
 const loadingQuotes = [
   {
@@ -224,31 +226,39 @@ function goStep(n) {
         document.querySelector(`[data-step="${n}"]`).classList.add('active');
     }
 
-    document.querySelectorAll('.w-step').forEach((el, idx) => {
+    document.querySelectorAll('.w-label-glass').forEach((el, idx) => {
         el.classList.remove('active', 'completed');
         if (idx + 1 < n) el.classList.add('completed');
         if (idx + 1 === n) el.classList.add('active');
     });
 
-    // Fill the connector lines
-    const fill1 = document.getElementById('w-fill-1');
-    const fill2 = document.getElementById('w-fill-2');
-    if (fill1 && fill2) {
-        fill1.classList.toggle('filled', n >= 2);
-        fill2.classList.toggle('filled', n >= 3);
-        if (n === 1) { fill1.style.width = '0%'; fill2.style.width = '0%'; }
-        else if (n === 2) { fill1.style.width = '100%'; fill2.style.width = '0%'; }
-        else if (n === 3) { fill1.style.width = '100%'; fill2.style.width = '100%'; }
+    document.querySelectorAll('.wizard-checkpoint').forEach((el, idx) => {
+        el.classList.remove('active', 'completed');
+        if (idx + 1 < n) el.classList.add('completed');
+        if (idx + 1 === n) el.classList.add('active');
+    });
+
+    const fillBar = document.getElementById('wizard-fill-bar');
+    if (fillBar) {
+        const progress = n === 1 ? 5 : (n === 2 ? 50 : 100);
+        fillBar.style.width = progress + '%';
     }
 
+
+
+
+
     currentStep = n;
+
     window.scrollTo(0, 0);
     if (n === 2) { updateEMIPreview(); loadMarketRates(); }
 }
 
 function showAllSteps(e) {
     e.preventDefault();
-    document.querySelector('.wizard-bar').style.display = 'none';
+    const nav = document.querySelector('.glass-wizard-nav');
+    if (nav) nav.style.display = 'none';
+
     document.querySelectorAll('[data-step]').forEach(el => el.classList.add('active'));
     e.target.style.display = 'none';
     const btn = document.createElement('button');
@@ -966,15 +976,31 @@ function renderScorecardSection(report, computed, ratio, runway, dpRatio) {
 
 function renderPropertyAssessment(pa = {}) {
     const flags = pa.property_flags || [];
-    return `<div class="bank-email-insight" style="display:block; margin-bottom:18px;">${esc(getPropertySummary(pa))}</div>
-        <table class="dtable"><tr><td>Your price/sqft</td><td>${inr(pa.price_assessment?.price_per_sqft)}</td></tr><tr><td>Area median</td><td>${inr(pa.price_assessment?.area_median_per_sqft)}</td></tr></table>
-        ${flags.length ? `<div class="property-flag-list">${flags.map(flag => `
-            <div class="property-flag-card">
-                <div class="property-flag-top">${makeStatusChip(startCase(flag.severity), flag.severity === 'critical' ? 'danger' : flag.severity === 'high' || flag.severity === 'medium' ? 'warn' : 'safe')}<strong>${esc(startCase(flag.flag))}</strong></div>
-                <div>${esc(flag.detail)}</div>
-            </div>`).join('')}</div>` : renderEmptyState('No major property flags were returned in this pass, so review documents and builder history carefully.')}
-        ${renderOcCcStatus(pa.oc_cc_status)}`;
+    return `
+        <div class="p-card" style="grid-column: 1 / -1; margin-bottom: 0;">
+            <div class="p-card-meta" style="font-size: 14px; color: var(--text);">${esc(getPropertySummary(pa))}</div>
+        </div>
+        <div class="p-card">
+            <div class="p-card-label">Price / Sqft</div>
+            <div class="p-card-val">${inr(pa.price_assessment?.price_per_sqft)}</div>
+            <div class="p-card-meta">Your input price divided by carpet area.</div>
+        </div>
+        <div class="p-card">
+            <div class="p-card-label">Area Median</div>
+            <div class="p-card-val">${inr(pa.price_assessment?.area_median_per_sqft)}</div>
+            <div class="p-card-meta">Locality benchmark for this property tier.</div>
+        </div>
+        ${flags.map(flag => `
+            <div class="p-card" style="border-left: 3px solid ${flag.severity === 'critical' ? 'var(--red)' : flag.severity === 'high' ? 'var(--yellow)' : 'var(--accent)'}">
+                <div class="p-card-label">${esc(startCase(flag.flag))}</div>
+                <div class="p-card-val" style="font-size: 14px;">${flag.severity.toUpperCase()}</div>
+                <div class="p-card-meta">${esc(flag.detail)}</div>
+            </div>`).join('')}
+        <div class="p-card" style="grid-column: 1 / -1;">
+            ${renderOcCcStatus(pa.oc_cc_status)}
+        </div>`;
 }
+
 
 function renderAccordionSection(summary, items, emptyMessage) {
     if (!items.length) return renderEmptyState(emptyMessage);
@@ -1066,28 +1092,33 @@ function renderReport(r) {
     try {
     if (c.true_total_acquisition_cost) {
         document.getElementById('r-tco').innerHTML = `
-            <table class="dtable">
-                <tr><td>Base Property Price</td><td>${inr(lastInput?.property?.property_price)}</td></tr>
-                <tr><td>Taxes & Registration</td><td>${inr((c.total_acquisition_cost || 0) - (lastInput?.property?.property_price || 0))}</td></tr>
-                <tr><td>Estimated Interiors (12%)</td><td>${inr(c.interiors_estimated_cost)}</td></tr>
-                <tr style="border-top:2px solid var(--border);font-weight:700"><td style="color:var(--text)">True Upfront Cost</td><td>${inr(c.true_total_acquisition_cost)}</td></tr>
-                <tr><td>10-Yr Opp. Cost (if invested at 12%)</td><td style="color:var(--yellow)">${inr(c.down_payment_opportunity_cost_10yr)}</td></tr>
-            </table>`;
+            <div class="dtable-shell">
+                <table class="dtable">
+                    <tr><td>Base Property Price</td><td>${inr(lastInput?.property?.property_price)}</td></tr>
+                    <tr><td>Taxes & Registration</td><td>${inr((c.total_acquisition_cost || 0) - (lastInput?.property?.property_price || 0))}</td></tr>
+                    <tr><td>Estimated Interiors (12%)</td><td>${inr(c.interiors_estimated_cost)}</td></tr>
+                    <tr class="total-row"><td>True Upfront Cost</td><td>${inr(c.true_total_acquisition_cost)}</td></tr>
+                    <tr class="opp-cost-row"><td>10-Yr Down Payment Opp. Cost</td><td>${inr(c.down_payment_opportunity_cost_10yr)}</td></tr>
+                </table>
+            </div>`;
+
     } else {
         document.getElementById('r-tco').parentElement.style.display = 'none';
     }
     } catch(e) { document.getElementById('r-tco').innerHTML = '<div class="empty-state-note">Section unavailable</div>'; console.error('r-tco failed:', e); }
 
-    try { document.getElementById('r-stress').innerHTML = (r.stress_scenarios || []).map(s => `
-        <div class="stress-row sc2 ${s.can_survive ? '' : 'fail'}">
-            <div class="stress-indicator ${s.can_survive ? 'pass' : 'fail'}"></div>
-            <div style="flex:1; min-width:0;">
-                <div class="stress-name">${esc(startCase(s.name))}</div>
-                ${(s.name || '').includes('job_loss') ? '<div class="ponr-timeline" id="ponr-container" style="margin-top:10px;"></div>' : ''}
-            </div>
-            <div class="stress-key-number">${esc(s.key_number)}</div>
-            <div class="stress-badge" style="color:${s.can_survive ? 'var(--green)' : 'var(--red)'}">${s.can_survive ? 'SURVIVES' : 'AT RISK'}</div>
-        </div>`).join('') || renderEmptyState('Stress scenarios are not available yet for this run.'); document.getElementById('r-stress').insertAdjacentHTML('afterbegin', `<div class="bank-email-insight" style="display:block; margin-bottom:18px;">${esc(getStressSummary(r.stress_scenarios || []))}</div>`); animateStressCards(); } catch(e) { document.getElementById('r-stress').innerHTML = '<div class="empty-state-note">Section unavailable</div>'; console.error('r-stress failed:', e); }
+    try { 
+        document.getElementById('r-stress').innerHTML = (r.stress_scenarios || []).map(s => `
+            <div class="p-card stress-card ${s.can_survive ? 'pass' : 'fail'}">
+                <div class="p-card-label">${esc(startCase(s.name))}</div>
+                <div class="p-card-val" style="color: ${s.can_survive ? 'var(--green)' : 'var(--red)'}">${esc(s.key_number)}</div>
+                <div class="p-card-meta">${s.can_survive ? 'Survives: Buffer holds.' : 'At Risk: Scenario breaks budget.'}</div>
+                ${(s.name || '').includes('job_loss') ? '<div class="ponr-timeline" id="ponr-container" style="margin-top:12px;"></div>' : ''}
+            </div>`).join('');
+        document.getElementById('r-stress').insertAdjacentHTML('afterbegin', `<div class="p-card" style="grid-column: 1 / -1; margin-bottom: 0;"><div class="p-card-meta" style="font-size:14px; color:var(--text);">${esc(getStressSummary(r.stress_scenarios || []))}</div></div>`); 
+        animateStressCards(); 
+    } catch(e) { document.getElementById('r-stress').innerHTML = '<div class="empty-state-note">Section unavailable</div>'; console.error('r-stress failed:', e); }
+
 
     try {
     if (r.path_to_safe) {
@@ -1103,10 +1134,16 @@ function renderReport(r) {
 
     try { const rvb = r.rent_vs_buy || {}; document.getElementById('r-rvb').innerHTML = `<div class="bank-email-insight" style="display:block; margin-bottom:18px;">${(c.rent_vs_buy_break_even_years || 0) > 7 ? 'The break-even is long, so buying only makes sense if you plan to stay and hold through the cycle.' : 'The buy case catches up relatively faster, which improves the ownership story if the rest of the audit also holds.'}</div><div class="rvb-compare"><div class="rvb-box rent"><div class="rvb-box-label">If You Rent</div><div class="rvb-box-val">${inr(rvb.equivalent_monthly_rent)}</div></div><div class="rvb-box buy"><div class="rvb-box-label">If You Buy</div><div class="rvb-box-val">${inr(rvb.buying_monthly_cost)}</div></div></div><div class="rvb-diff">Break-even is <strong>${(c.rent_vs_buy_break_even_years || 0).toFixed(1)} years</strong>.</div>`; } catch(e) { document.getElementById('r-rvb').innerHTML = '<div class="empty-state-note">Section unavailable</div>'; console.error('r-rvb failed:', e); }
 
-    try { document.getElementById('r-challenges').innerHTML = renderAccordionSection(
-        'These are the weak links in the story buyers usually ignore when emotion is already high.',
-        (r.assumptions_challenged || []).map(item => ({
-            title: startCase(item.assumption),
+    function safeSetHTML(id, html) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html;
+        else console.warn(`Element #${id} not found in DOM`);
+    }
+
+    try { safeSetHTML('r-challenges', renderAccordionSection(
+        'These are the weak links in the story that buyers usually ignore when they are already emotionally committed.',
+        (r.challenged_assumptions || []).map(item => ({
+            title: startCase(item.severity),
             summary: item.challenge,
             details: [
                 { icon: '!', status: startCase(item.severity), zone: item.severity === 'critical' ? 'danger' : item.severity === 'high' ? 'warn' : 'info', text: item.impact || item.challenge },
@@ -1114,37 +1151,44 @@ function renderReport(r) {
             ]
         })),
         'No explicit challenged assumptions were returned, which usually means the run found fewer high-confidence contradictions.'
-    ); } catch(e) { document.getElementById('r-challenges').innerHTML = '<div class="empty-state-note">Section unavailable</div>'; console.error('r-challenges failed:', e); }
-    try { document.getElementById('r-reasons').innerHTML = renderAccordionSection(
+    )); } catch(e) { console.error('r-challenges failed:', e); }
+
+    try { safeSetHTML('r-reasons', renderAccordionSection(
         'These are the few points carrying the most weight in the verdict, so treat them as the real decision drivers.',
         (r.top_reasons || []).map(reason => ({ title: startCase(reason.split('.')[0] || reason), summary: reason, details: [{ icon: '•', text: reason }] })),
         'Top reasons are still being synthesized for this report.'
-    ); } catch(e) { document.getElementById('r-reasons').innerHTML = '<div class="empty-state-note">Section unavailable</div>'; console.error('r-reasons failed:', e); }
-    try { document.getElementById('r-actions').innerHTML = renderAccordionSection(
+    )); } catch(e) { console.error('r-reasons failed:', e); }
+
+    try { safeSetHTML('r-actions', renderAccordionSection(
         'The best next move is usually to reduce irreversible risk before negotiating on emotion.',
         (r.recommended_actions || []).map(action => ({ title: startCase(action.split('.')[0] || action), summary: action, details: [{ icon: '→', text: action }] })),
         'No action list was returned for this scenario.'
-    ); } catch(e) { document.getElementById('r-actions').innerHTML = '<div class="empty-state-note">Section unavailable</div>'; console.error('r-actions failed:', e); }
-    try { document.getElementById('r-reasoning-insight').innerHTML = `<strong>Read the narrative only after the summary cards.</strong>${esc(getAffordabilitySummary(surplus, emiR, runway))}<div style="margin-top:10px;">This section preserves the full audit, but the summary cards above should do most of the decision work.</div>`; } catch(e) { console.error('r-reasoning-insight failed:', e); }
-    try { document.getElementById('r-reasoning').innerHTML = r.full_reasoning ? `<div class="rcard" style="padding:20px; line-height:1.8;">${esc(r.full_reasoning).replace(/\n/g, '<br>')}</div>` : renderEmptyState('Full reasoning was not included in this response.'); } catch(e) { document.getElementById('r-reasoning').innerHTML = '<div class="empty-state-note">Section unavailable</div>'; console.error('r-reasoning failed:', e); }
-    try { document.getElementById('r-blind').innerHTML = renderAccordionSection(
+    )); } catch(e) { console.error('r-actions failed:', e); }
+
+    try { safeSetHTML('r-reasoning-insight', `<strong>Read the narrative only after the summary cards.</strong>${esc(getAffordabilitySummary(surplus, emiR, runway))}<div style="margin-top:10px;">This section preserves the full audit, but the summary cards above should do most of the decision work.</div>`); } catch(e) { console.error('r-reasoning-insight failed:', e); }
+
+    try { safeSetHTML('r-reasoning', r.full_reasoning ? `<div class="rcard" style="padding:20px; line-height:1.8;">${esc(r.full_reasoning).replace(/\n/g, '<br>')}</div>` : renderEmptyState('Full reasoning was not included in this response.')); } catch(e) { console.error('r-reasoning failed:', e); }
+
+    try { safeSetHTML('r-blind', renderAccordionSection(
         'These are the important gaps in the current decision frame that could distort the final call.',
         (r.blind_spots || []).map(item => ({ title: startCase(item), summary: item, details: [{ icon: '◌', status: 'Attention', zone: 'warn', text: item }] })),
         'No blind spots were flagged in this run.'
-    ); } catch(e) { document.getElementById('r-blind').innerHTML = '<div class="empty-state-note">Section unavailable</div>'; console.error('r-blind failed:', e); }
-    try { document.getElementById('r-emo').innerHTML = renderAccordionSection(
+    )); } catch(e) { console.error('r-blind failed:', e); }
+
+    try { safeSetHTML('r-emo', renderAccordionSection(
         'Signals that the choice may be driven by urgency, sunk cost, optimism, or confirmation-seeking.',
         (r.emotional_flags || []).map(item => ({ title: startCase(item), summary: item, details: [{ icon: '⚑', status: 'Bias Risk', zone: 'warn', text: item }] })),
         'No cognitive or emotional flags were returned.'
-    ); } catch(e) { document.getElementById('r-emo').innerHTML = '<div class="empty-state-note">Section unavailable</div>'; console.error('r-emo failed:', e); }
+    )); } catch(e) { console.error('r-emo failed:', e); }
 
     let covMsg = "";
     if (r.benchmark_coverage?.coverage_level === "default") covMsg = `<span style="color:var(--red)">⚠ ${esc(r.benchmark_coverage.warning)}</span> · `;
     else if (r.benchmark_coverage?.coverage_level === "partial") covMsg = `<span style="color:var(--yellow)">⚠ Partial benchmark data</span> · `;
-    document.getElementById('r-meta').innerHTML = `<div class="bank-email-insight" style="display:block; margin-bottom:18px;">Use this metadata to judge how much confidence to place in the output and where you may still need manual verification.</div>${covMsg}Analysis in ${r._meta?.pipeline_time_seconds || '?'}s · ${(r.data_sources || []).join(' · ')}`;
+    safeSetHTML('r-meta', `<div class="bank-email-insight" style="display:block; margin-bottom:18px;">Use this metadata to judge how much confidence to place in the output and where you may still need manual verification.</div>${covMsg}Analysis in ${r._meta?.pipeline_time_seconds || '?'}s · ${(r.data_sources || []).join(' · ')}`);
+
 
     initWhatIf(r);
-    initStickySummary(r);
+
     setupCashflowInteractions();
     const jobLossScenario = (r.stress_scenarios || []).find(s => (s.name || '').includes('job_loss'));
     renderPointOfNoReturn(document.getElementById('ponr-container'), jobLossScenario || { can_survive: runway >= 6, months_before_default: Math.max(Math.round(runway), 0) });
@@ -2532,29 +2576,7 @@ function updateAnalysisProgress() {
  * Initializes sticky summary bar that appears when scrolling past verdict.
  * @param {Object} report - Full pipeline output
  */
-function initStickySummary(report) {
-  const verdictEl = document.getElementById('r-verdict');
-  const summaryEl = document.getElementById('sticky-summary');
-  if (!verdictEl || !summaryEl) return;
 
-  const ssVerdict = document.getElementById('ss-verdict');
-  const ssEmi = document.getElementById('ss-emi');
-  const ssRunway = document.getElementById('ss-runway');
-
-  if (ssVerdict) {
-    ssVerdict.textContent = (report.verdict || 'RISKY').toUpperCase();
-    ssVerdict.style.color = report.verdict === 'safe' ? 'var(--green)' :
-                            report.verdict === 'risky' ? 'var(--yellow)' :
-                            'var(--red)';
-  }
-  if (ssEmi) ssEmi.textContent = 'EMI ' + inr(report.computed_numbers?.monthly_emi || 0);
-  if (ssRunway) ssRunway.textContent =
-    (report.computed_numbers?.emergency_runway_months || 0).toFixed(1) + ' mo runway';
-
-  new IntersectionObserver(([entry]) => {
-    summaryEl.classList.toggle('visible', !entry.isIntersecting);
-  }, { threshold: 0.1 }).observe(verdictEl);
-}
 
 function initDocumentDropzones() {
   document.querySelectorAll('.doc-upload-zone').forEach(zone => {

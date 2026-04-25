@@ -119,18 +119,25 @@
         /* Loading progress bar */
         .loading-progress-bar {
             width: 100%;
-            height: 3px;
-            background: var(--border);
-            border-radius: 2px;
+            height: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 99px;
             overflow: hidden;
             margin-bottom: 32px;
+            position: relative;
         }
         .loading-progress-fill {
             height: 100%;
-            background: var(--accent);
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 99px;
             width: 30%;
             animation: indeterminate 1.6s ease infinite;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
         }
+
 
         /* Sticky summary bar */
         .sticky-summary {
@@ -379,57 +386,37 @@
 
 <body>
 
-    <nav class="landing-nav calc-nav">
-        <div class="nav-inner container">
-            <a href="/" class="nav-logo"><span class="nav-logo-niv">NIV</span> AI</a>
-            <div class="calc-nav-actions">
-                <span class="ttc-badge" id="ttc-badge">~2 min</span>
-                <a href="/" class="btn-ghost">Exit to Home</a>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container" id="form-section">
+
+
+    <div class="container" id="form-section" style="padding-top: 160px;">
+
+
         <div id="err" role="alert"
             style="display:none; color:var(--red); padding:16px; border-left:3px solid var(--red); background:var(--surface-2); margin-bottom:24px;">
         </div>
 
-        <div class="lang-toggle">
-            <span class="lang-label">OUTPUT LANGUAGE</span>
-            <div class="lang-options">
-                <button class="lang-btn active" onclick="setLang('english',this)">EN</button>
-                <button class="lang-btn" onclick="setLang('hindi',this)">हि</button>
-                <button class="lang-btn" onclick="setLang('marathi',this)">म</button>
-            </div>
-        </div>
-
-        <div style="text-align:right;margin-bottom:16px;">
-            <button type="button" class="btn-ghost" onclick="loadDemoScenario()"
-                    style="font-size:12px;opacity:0.7">Load sample scenario ↗</button>
-        </div>
-
-        <div class="wizard-bar">
-            <div class="wizard-steps">
-                <div class="w-step active" data-step-nav="1">
-                    <span class="w-num">01</span>
-                    <span class="w-label">FINANCES</span>
-                </div>
-                <div class="w-connector">
-                    <div class="w-fill" id="w-fill-1"></div>
-                </div>
-                <div class="w-step" data-step-nav="2">
-                    <span class="w-num">02</span>
-                    <span class="w-label">PROPERTY</span>
-                </div>
-                <div class="w-connector">
-                    <div class="w-fill" id="w-fill-2"></div>
-                </div>
-                <div class="w-step" data-step-nav="3">
-                    <span class="w-num">03</span>
-                    <span class="w-label">DETAILS</span>
+        <div class="glass-wizard-nav">
+            <div class="wizard-pill-inner">
+                <a href="/" class="pill-logo"><span class="nav-logo-niv">NIV</span> AI</a>
+                <div class="wizard-progress-bar-wrap">
+                    <div class="wizard-track">
+                        <div class="wizard-fill-line" id="wizard-fill-bar"></div>
+                        <div class="wizard-checkpoint cp-1 active" data-cp="1"></div>
+                        <div class="wizard-checkpoint cp-2" data-cp="2"></div>
+                        <div class="wizard-checkpoint cp-3" data-cp="3"></div>
+                    </div>
+    
+                    <div class="wizard-labels">
+                        <div class="w-label-glass active" data-step-nav="1" onclick="goStep(1)">FINANCE</div>
+                        <div class="w-label-glass" data-step-nav="2" onclick="goStep(2)">PROPERTY</div>
+                        <div class="w-label-glass" data-step-nav="3" onclick="goStep(3)">DETAILS</div>
+                    </div>
                 </div>
             </div>
         </div>
+
+
 
         <!-- Step 1 -->
         <div class="step-card active" data-step="1">
@@ -752,11 +739,26 @@
             </div>
         </div>
 
-        <div style="text-align:center; padding: 24px 0;">
+        <div class="lang-toggle" style="margin-top:40px; margin-bottom:24px; display:flex; align-items:center; justify-content:center; gap:24px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span class="lang-label">OUTPUT LANGUAGE</span>
+                <div class="lang-options">
+                    <button class="lang-btn active" onclick="setLang('english',this)">EN</button>
+                    <button class="lang-btn" onclick="setLang('hindi',this)">हि</button>
+                    <button class="lang-btn" onclick="setLang('marathi',this)">म</button>
+                </div>
+            </div>
+            <button type="button" class="btn-ghost" onclick="loadDemoScenario()"
+                    style="font-size:12px;opacity:0.7;padding:0 12px;min-height:32px;">Load Sample scenario ↗</button>
+        </div>
+
+
+        <div style="text-align:center; padding-bottom: 24px;">
             <a href="#" onclick="showAllSteps(event)"
                 style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-faint); text-decoration:none;">Show
                 all fields at once</a>
         </div>
+
     </div>
 
     <!-- Loading View -->
@@ -930,6 +932,7 @@
                 <button type="button" class="report-page-dot" id="report-page-dot-3" onclick="setReportPage(3)">4</button>
                 <button type="button" class="report-page-dot" id="report-page-dot-4" onclick="setReportPage(4)">5</button>
                 <button type="button" class="report-page-dot" id="report-page-dot-5" onclick="setReportPage(5)">6</button>
+
             </div>
         </div>
 
@@ -1045,15 +1048,11 @@
         <div class="report-section">
             <div class="section-label"><span>04 ·</span> STRESS TEST SCENARIOS</div>
             <div class="section-kicker">These scenarios answer the real question: does the decision survive normal life shocks, not just best-case assumptions?</div>
-            <div class="rcard">
-                <div id="r-stress">
-                    <div class="stress-burst-target" data-scenario="job_loss">
-                        <div class="ponr-timeline" id="ponr-container"></div>
-                    </div>
-                    <div class="stress-burst-target" data-scenario="rate_hike"></div>
-                    <div class="stress-burst-target" data-scenario="medical_emergency"></div>
-                </div>
+            <div id="r-stress" class="stress-grid-layout">
+                <!-- Populated by app.js -->
             </div>
+        </div>
+
         </div>
 
         <!-- PAGE 3: Property Value & Rent vs Buy -->
@@ -1061,10 +1060,11 @@
         <div class="report-section">
             <div class="section-label"><span>05 ·</span> PROPERTY ASSESSMENT</div>
             <div class="section-kicker">This section shows whether the asset itself looks sensible for the price and risk you are taking on.</div>
-            <div class="rcard">
-                <div id="r-property"></div>
+            <div id="r-property" class="property-assessment-grid">
+                <!-- Populated by app.js -->
             </div>
         </div>
+
 
         <div id="r-rvb-context" class="report-section"></div>
 
@@ -1091,84 +1091,68 @@
         <div class="report-section">
             <div class="section-label"><span>07 ·</span> TRUE COST OF OWNERSHIP</div>
             <div class="section-kicker">This is the money actually committed, including friction costs that are easy to underestimate during booking.</div>
-            <div class="rcard">
+            <div class="premium-report-card">
                 <div id="r-tco"></div>
             </div>
         </div>
 
-        <div class="report-section">
-            <div class="section-label"><span>08 ·</span> DOCUMENT VERIFICATION SUITE</div>
-            <div class="section-kicker">Upload documents here to pressure-test title, bank terms, and negotiation readiness before you commit.</div>
-            <div class="rcard" id="r-documents">
-                <div class="document-grid">
-                    <div class="doc-upload-zone" onclick="document.getElementById('ec-file').click()" data-upload-kind="ec">
-                        <input type="file" id="ec-file" accept=".pdf" style="display:none" onchange="uploadEC(this)">
-                        <div class="doc-upload-icon" aria-hidden="true">☁</div>
-                        <div class="doc-upload-title">Click to upload or drag and drop</div>
-                        <div class="doc-upload-subtitle">Encumbrance Certificate PDF</div>
-                        <div class="doc-upload-meta">PDF up to 10MB · Checks mortgages and title chain</div>
-                    </div>
-                    <div class="doc-upload-zone" onclick="document.getElementById('loan-file').click()" data-upload-kind="loan">
-                        <input type="file" id="loan-file" accept=".pdf,image/*" style="display:none" onchange="uploadLoanLetter(this)">
-                        <div class="doc-upload-icon" aria-hidden="true">⇪</div>
-                        <div class="doc-upload-title">Click to upload or drag and drop</div>
-                        <div class="doc-upload-subtitle">Loan letter or sanction document</div>
-                        <div class="doc-upload-meta">PDF, PNG, JPG up to 10MB · Extracts rate and hidden charges</div>
-                    </div>
-                </div>
-                <div class="document-result-grid">
-                    <div id="ec-result"></div>
-                    <div id="loan-result"></div>
-                </div>
-                <div class="document-actions">
-                    <button class="btn-ghost" onclick="downloadCounterOffer()" id="counter-offer-btn">Counter-Offer Letter</button>
-                    <button class="btn-ghost" onclick="openBankEmailModal()">Loan Inquiry Email</button>
-                </div>
-            </div>
-        </div>
+
+
         </div>
 
         <div class="report-page" data-page-title="Reasoning & Blind Spots">
         <div class="report-section">
             <div class="section-label"><span>09 ·</span> ASSUMPTIONS CHALLENGED</div>
             <div class="section-kicker">These are the weak links in the story that buyers usually ignore when they are already emotionally committed.</div>
-            <div id="r-challenges"></div>
+            <div id="r-challenges" class="premium-report-card"></div>
         </div>
 
-        <div class="report-section" style="display:flex; gap:24px; flex-wrap:wrap;">
-            <div style="flex:1; min-width:300px;">
-                <div class="section-label"><span>10 ·</span> WHY THIS VERDICT</div>
-                <div class="section-kicker">The highest-signal reasons driving the overall recommendation.</div>
-                <div id="r-reasons"></div>
-            </div>
-            <div style="flex:1; min-width:300px;">
-                <div class="section-label"><span>11 ·</span> ACTIONS</div>
-                <div class="section-kicker">If you still want this property, these are the smartest next moves to reduce risk.</div>
-                <div id="r-actions"></div>
-            </div>
+
+        <div class="report-section">
+            <div class="section-label"><span>10 ·</span> WHY THIS VERDICT</div>
+            <div class="section-kicker">The highest-signal reasons driving the overall recommendation.</div>
+            <div id="r-reasons" class="premium-report-card"></div>
+        </div>
+
+
+        <div class="report-section">
+            <div class="section-label"><span>11 ·</span> ACTIONS</div>
+            <div class="section-kicker">If you still want this property, these are the smartest next moves to reduce risk.</div>
+            <div id="r-actions"></div>
         </div>
 
         <div class="report-section">
-            <div class="section-label"><span>12 ·</span> PATH TO SAFE</div>
-            <div class="section-kicker">When the verdict is not safe, this tells you what would need to change for the decision to improve materially.</div>
-            <div id="r-path-to-safe"></div>
+            <div class="section-label"><span>12 ·</span> BLIND SPOTS</div>
+            <div class="section-kicker">Critical gaps in your decision frame identified by the engine.</div>
+            <div id="r-blind"></div>
         </div>
 
-        <div class="report-section">
-            <div class="section-label"><span>13 ·</span> FULL REASONING</div>
-            <div class="section-kicker">A narrative audit of affordability, resilience, property quality, and downside risk.</div>
-            <div class="reasoning-layout">
-                <div id="r-reasoning-insight" class="reasoning-insight-card"></div>
-                <div id="r-reasoning" class="reasoning"></div>
-            </div>
+
+
+
         </div>
 
         <!-- PAGE 6: Action & Export -->
         <div class="report-page" data-page-title="Action &amp; Export">
-        <div id="r-primary-action" class="report-section"></div>
+
 
         <div class="report-section">
-            <div class="section-label"><span>08 ·</span> DOCUMENT VERIFICATION SUITE</div>
+            <div class="section-label"><span>13 ·</span> FULL REASONING</div>
+            <div class="section-kicker">A narrative audit of affordability, resilience, property quality, and downside risk.</div>
+            <div class="premium-report-card">
+                <div class="reasoning-layout">
+                    <div id="r-reasoning-insight" class="reasoning-insight-card"></div>
+                    <div id="r-reasoning" class="reasoning"></div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="report-section">
+            <div class="section-label"><span>14 ·</span> DOCUMENT VERIFICATION SUITE</div>
+
+
             <div class="section-kicker">Upload documents here to pressure-test title, bank terms, and negotiation readiness before you commit.</div>
             <div class="rcard" id="r-documents">
                 <div class="document-grid">
@@ -1199,7 +1183,8 @@
         </div>
 
         <div class="report-section comparison-section" id="compare-section">
-            <div class="section-label"><span>16 ·</span> COMPARISON</div>
+            <div class="section-label"><span>15 ·</span> COMPARISON</div>
+
             <div class="section-kicker">Compare this option against a second property using the same audit lens before you decide.</div>
             <div id="compare-bar" style="margin-bottom:16px">
                 <button class="btn-ghost" onclick="startComparison()">+ Compare Property</button>
@@ -1241,23 +1226,30 @@
             <div id="compare-results"></div>
         </div>
 
-        <div class="report-section">
-            <div class="section-label"><span>17 ·</span> META</div>
-            <div class="section-kicker">Coverage and source transparency so you know how much of the decision is benchmark-backed versus assumption-led.</div>
-            <div id="r-meta"></div>
+
+
+        <div class="report-section" style="margin-bottom: 64px;">
+            <div class="section-label"><span>16 ·</span> EXPORT & SHARE</div>
+            <div class="section-kicker">Download your full report or share a summary card on LinkedIn.</div>
+            <div class="export-actions-minimal">
+                <button class="btn-primary" onclick="downloadPDF()">Download PDF Report</button>
+                <button class="btn-ghost" onclick="downloadLinkedInCard()">LinkedIn Card Download</button>
+            </div>
         </div>
 
-        <div class="report-actions" style="display:flex; gap:16px; margin:64px 0;">
-            <button class="btn-primary" onclick="downloadPDF()">Download PDF</button>
-            <button class="btn-ghost" onclick="downloadLinkedInCard()">LinkedIn Card</button>
-        </div>
         </div>
 
-        <div class="report-pager-bottom">
-            <div class="report-page-label" id="report-page-progress">Page 1 of 5</div>
-            <div class="report-nav-actions">
-                <button type="button" class="btn-ghost" onclick="prevReportPage()" id="report-prev-btn">Back</button>
-                <button type="button" class="btn-primary" onclick="nextReportPage()" id="report-next-btn">Next</button>
+        <div class="report-minimal-footer">
+            <div class="report-footer-sources">
+                <strong>Note:</strong> Analysis in 37.77s · Mumbai micro-market benchmarks (NIV AI Q4 2025 database) · RBI Master Circular — Housing Finance (2024) · Maharashtra Stamp Duty & Registration Act · Income Tax Act Sections 80C and 24(b) · RERA Maharashtra Public Portal
+            </div>
+
+            <div class="report-pager-minimal">
+                <div class="report-nav-actions">
+                    <button type="button" class="btn-ghost" onclick="prevReportPage()" id="report-prev-btn">Back</button>
+                    <div class="report-page-label" id="report-page-progress">Page 1 of 6</div>
+                    <button type="button" class="btn-primary" onclick="nextReportPage()" id="report-next-btn">Next</button>
+                </div>
             </div>
         </div>
 
@@ -1310,13 +1302,7 @@
         <span id="print-meta"></span>
     </div>
 
-    <div class="sticky-summary" id="sticky-summary">
-        <div class="sticky-summary-label">Decision Snapshot</div>
-        <div id="ss-verdict"></div>
-        <div id="ss-emi"></div>
-        <div id="ss-runway"></div>
-        <button onclick="window.scrollTo(0,0)">↑ Top</button>
-    </div>
+
 
     <div id="cashflow-tooltip" class="cashflow-tooltip" style="display:none;"></div>
 

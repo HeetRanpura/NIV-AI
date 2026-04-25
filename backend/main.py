@@ -35,10 +35,7 @@ async def _custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) -
     return JSONResponse(
         status_code=429,
         content={
-            "detail": (
-                "Rate limit exceeded. Maximum 5 analyses per 10 minutes per IP. "
-                "Please wait before trying again."
-            ),
+            "detail": "Rate limit exceeded. Please wait before trying again.",
             "retry_after_seconds": retry_after,
         },
         headers={"Retry-After": str(retry_after)},
