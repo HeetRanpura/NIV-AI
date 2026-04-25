@@ -107,17 +107,79 @@ async def extract_loan_letter_text(file_bytes: bytes, content_type: str) -> str:
     return text[:6000] if text else ""
 
 
-async def analyze_loan_letter(llm: "LLMClient", text: str) -> dict:
+async def analyze_loan_letter_multimodal(
+    llm: "LLMClient",
+    file_bytes: bytes,
+    content_type: str,
+) -> Optional[dict]:
     """
-    Analyzes extracted loan letter text to identify all financial terms.
+    Uses Gemini 1.5 Pro multimodal to analyze a loan sanction letter from raw bytes.
+    Processes visual layout, tables, stamps, and handwritten annotations that
+    OCR-based extraction misses.
+
+    Falls back to None when Gemini document analysis is unavailable.
+    Caller uses existing text extraction path on None return.
+
+    Args:
+        llm: LLM client with run_document_analysis capability.
+        file_bytes: Raw file bytes (PDF or image) of the loan sanction letter.
+        content_type: MIME type string.
+
+    Returns:
+        Parsed analysis dict or None if multimodal unavailable.
+    """
+    if not hasattr(llm, 'run_document_analysis'):
+        return None
+
+    prompt = (
+        "Analyze this bank home loan sanction letter. Extract all financial terms "
+        "including sanctioned amount, interest rate (fixed/floating), processing fee, "
+        "prepayment penalty, tenure, EMI amount, any hidden charges or conditions. "
+        "Return ONLY JSON with: sanctioned_amount, interest_rate, rate_type, "
+        "tenure_months, monthly_emi, processing_fee, prepayment_penalty, "
+        "hidden_charges (list of strings), conditions (list), bank_name, summary."
+    )
+
+    logger.info(
+        "Loan letter multimodal analysis via Gemini 1.5 Pro, content_type=%s",
+        content_type,
+    )
+    response = await llm.run_document_analysis(file_bytes, content_type, prompt)
+    if not response:
+        return None
+    return llm.parse_json(response)
+
+
+async def analyze_loan_letter(
+    llm: "LLMClient",
+    text: str,
+    file_bytes: Optional[bytes] = None,
+    content_type: str = "application/pdf",
+) -> dict:
+    """
+    Analyzes a loan sanction letter. Tries Gemini 1.5 Pro multimodal first
+    when raw bytes are available, then falls back to text-based Groq analysis.
 
     Args:
         llm: LLM client instance.
-        text: Raw text extracted from the loan letter.
+        text: Raw text extracted from the loan letter (used if multimodal unavailable).
+        file_bytes: Optional raw file bytes for multimodal analysis.
+        content_type: MIME type string (used with file_bytes).
 
     Returns:
         Structured dict with loan terms, fees, and auto-fill data.
     """
+    if file_bytes:
+        multimodal_result = await analyze_loan_letter_multimodal(llm, file_bytes, content_type)
+        if multimodal_result is not None:
+            logger.info(
+                "Loan letter analyzed via Gemini multimodal, bank=%s, amount=Rs.%s",
+                multimodal_result.get("bank_name"),
+                f"{multimodal_result.get('sanctioned_amount'):,.0f}"
+                if multimodal_result.get("sanctioned_amount") else "unknown",
+            )
+            return multimodal_result
+
     msg = (
         f"Extract all financial terms from this bank loan sanction letter:\n\n"
         f"<loan_text>\n{text}\n</loan_text>\n\n"
@@ -128,8 +190,8 @@ async def analyze_loan_letter(llm: "LLMClient", text: str) -> dict:
     raw = await llm.run_agent(LOAN_ANALYZER_SYSTEM_PROMPT, msg, max_tokens=1500)
     result = llm.parse_json(raw)
     logger.info(
-        "Loan letter analyzed, bank=%s, amount=%s",
+        "Loan letter analyzed via text extraction, bank=%s, amount=Rs.%s",
         result.get("bank_name"),
-        result.get("sanctioned_amount"),
+        f"{result.get('sanctioned_amount'):,.0f}" if result.get("sanctioned_amount") else "unknown",
     )
     return result

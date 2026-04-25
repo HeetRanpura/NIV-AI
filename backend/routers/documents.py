@@ -212,3 +212,65 @@ async def parse_loan_letter(request: Request, file: UploadFile = File(...)):
             "error": "Analysis failed. Please try again.",
             "data": None,
         }
+
+
+@router.post("/documents/inspect-property", response_model=None)
+@limiter.limit("5/hour")
+async def inspect_property(
+    request: Request,
+    files: list[UploadFile] = File(...),
+    location_area: str = Form(default="Mumbai"),
+    configuration: str = Form(default="2BHK"),
+    property_price: float = Form(default=0.0),
+):
+    """
+    Analyzes up to 5 property photographs using Gemini 1.5 Pro.
+    Returns structured visual condition assessment.
+    Rate-limited to 5 requests per hour per IP.
+    """
+    from backend.documents.property_inspector import inspect_property_images
+    from backend.llm.client import LLMClient
+
+    MAX_IMAGES = 5
+    image_data: list[bytes] = []
+    content_types: list[str] = []
+
+    for f in files[:MAX_IMAGES]:
+        if not (f.content_type or "").startswith("image/"):
+            continue
+        raw = await f.read()
+        if len(raw) > MAX_UPLOAD_MB * 1024 * 1024:
+            continue
+        image_data.append(raw)
+        content_types.append(f.content_type)
+
+    if not image_data:
+        raise HTTPException(
+            status_code=422,
+            detail="No valid image files provided (JPEG/PNG, max 10MB each)",
+        )
+
+    llm = LLMClient()
+    result = await inspect_property_images(
+        llm,
+        image_data,
+        content_types,
+        {
+            "location_area": location_area,
+            "configuration": configuration,
+            "property_price": property_price,
+        },
+    )
+
+    return {
+        "visual_inspection_score": result.visual_inspection_score,
+        "condition_grade": result.condition_grade,
+        "visible_defects": result.visible_defects,
+        "positive_observations": result.positive_observations,
+        "structural_concerns": result.structural_concerns,
+        "maintenance_flags": result.maintenance_flags,
+        "estimated_renovation_cost_range": result.estimated_renovation_cost_range,
+        "recommendation": result.recommendation,
+        "images_analyzed": result.images_analyzed,
+        "data_source": result.data_source,
+    }

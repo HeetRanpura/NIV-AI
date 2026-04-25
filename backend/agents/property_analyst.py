@@ -36,7 +36,8 @@ async def run(llm: LLMClient, context: dict, computed_numbers: dict, raw_input: 
     Run the Property & Market Analyst agent.
 
     Optionally performs a MahaRERA lookup for the builder when RERA_LOOKUP_ENABLED=true.
-    Always returns a dict regardless of RERA availability.
+    Attempts Gemini search grounding for live Mumbai micro-market data before falling
+    back to standard Groq inference.
 
     Args:
         llm: LLM client instance.
@@ -46,7 +47,7 @@ async def run(llm: LLMClient, context: dict, computed_numbers: dict, raw_input: 
 
     Returns:
         Dict containing price_assessment, property_flags, location_analysis, rent_vs_buy,
-        reasoning, and optionally rera_data.
+        reasoning, data_enriched_by_search, and optionally rera_data.
     """
     prop = raw_input["property"]
     benchmark_result = lookup_area(prop["location_area"])
@@ -86,8 +87,30 @@ Price: Rs.{prop["property_price"]:,.0f}, Location: {wrap_user_content(prop["loca
 Ready: {prop["is_ready_to_move"]}, RERA: {rera}, Builder: {wrap_user_content(prop.get("builder_name") or None)}, Possession: {wrap_user_content(prop.get("possession_date") or None)}, Notes: {wrap_user_content(prop.get("property_notes"))}
 Monthly ownership cost: Rs.{computed_numbers["monthly_ownership_cost"]:,.0f}, Rent-vs-buy premium: {computed_numbers["rent_vs_buy_premium_pct"]:.0f}%, Break-even: {computed_numbers["rent_vs_buy_break_even_years"]:.1f}yrs
 BENCHMARK: {bench_text}{rera_context}"""
-    raw = await llm.run_agent(SYSTEM_PROMPT, msg)
-    result = llm.parse_json(raw)
+
+    result: dict = {}
+    if hasattr(llm, 'run_with_search_grounding') and llm._gemini_model:
+        try:
+            grounded = await llm.run_with_search_grounding(
+                SYSTEM_PROMPT, msg, location_area=prop["location_area"]
+            )
+            if grounded:
+                result = llm.parse_json(grounded)
+                result["data_enriched_by_search"] = True
+                logger.info("Property analyst used Gemini search grounding")
+            else:
+                raw = await llm.run_agent(SYSTEM_PROMPT, msg)
+                result = llm.parse_json(raw)
+        except Exception as exc:
+            logger.debug("Search grounding failed, using standard: %s", exc)
+            raw = await llm.run_agent(SYSTEM_PROMPT, msg)
+            result = llm.parse_json(raw)
+    else:
+        raw = await llm.run_agent(SYSTEM_PROMPT, msg)
+        result = llm.parse_json(raw)
+
+    result.setdefault("data_enriched_by_search", False)
+
     if rera_data_dict:
         result["rera_data"] = rera_data_dict
 

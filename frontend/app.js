@@ -8,6 +8,8 @@ const STATE = {
   comparisonReport: null, currentShareUrl: '',
   bankEmailContent: null, frictionAnswers: {},
   marketRatesCache: null, marketRatesFetchTime: 0,
+  propertyPhotoFiles: [],
+  visualInspectionResult: null,
 };
 
 // === UTILITY FUNCTIONS ===
@@ -52,10 +54,16 @@ function onVisible(el, callback, threshold=0.2) {
  * @param {HTMLInputElement} input
  */
 function setupIndianNumberFormat(input) {
+  if (!input) return;
   input.addEventListener('input', function() {
-    const raw = this.value.replace(/[^0-9]/g, '');
+    let raw = this.value.replace(/[^0-9]/g, '');
+    if (raw.length > 12) raw = raw.slice(0, 12); // Limit to 12 digits (trillions)
     this.dataset.raw = raw;
-    if (raw) this.value = Number(raw).toLocaleString('en-IN');
+    if (raw) {
+      this.value = Number(raw).toLocaleString('en-IN');
+    } else {
+      this.value = '';
+    }
   });
 }
 
@@ -75,17 +83,23 @@ let currentShareUrl = '';
 function esc(s) { const d = document.createElement('div'); d.textContent = String(s || ''); return d.innerHTML; }
 function inr(n) { if (n == null) return '—'; return '₹' + Math.round(n).toLocaleString('en-IN'); }
 function pct(n) { return (n * 100).toFixed(1) + '%'; }
-function getNum(id) { return +document.getElementById(id)?.value || 0; }
+function getNum(id) { 
+    const val = document.getElementById(id)?.value || '';
+    return parseFloat(val.replace(/,/g, '')) || 0; 
+}
 function getVal(id) { return document.getElementById(id)?.value || ''; }
 function preview(el, previewId) {
-    const v = +el.value; const p = document.getElementById(previewId);
-    if (!p) return; p.textContent = v > 0 ? '= ' + inr(v) : '';
+    const raw = (el.value || '').replace(/,/g, '');
+    const v = parseFloat(raw);
+    const p = document.getElementById(previewId);
+    if (!p) return;
+    p.textContent = (v > 0) ? '≈ ' + inr(v) : '';
 }
 
 // === FORM / WIZARD ===
 function setLang(lang, btn) {
     selectedLanguage = lang;
-    document.querySelectorAll('.lang-opt').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 }
 
@@ -357,17 +371,19 @@ function onSubmitClick() {
     }
 }
 
-function selectFriction(qId, val) {
+function selectFriction(qId, val, btn) {
     frictionGateAnswers[qId] = val;
     const qDiv = document.getElementById(qId);
     qDiv.querySelectorAll('.friction-option').forEach(el => el.classList.remove('selected'));
-    event.target.classList.add('selected');
+    btn.classList.add('selected');
 
     const warn = qDiv.querySelector('.friction-warning');
-    if (val === 'C' || (val === 'B' && qId !== 'fq3')) {
-        warn.style.display = 'block';
-    } else {
-        warn.style.display = 'none';
+    if (warn) {
+        if (val === 'C' || (val === 'B' && qId !== 'fq3')) {
+            warn.style.display = 'block';
+        } else {
+            warn.style.display = 'none';
+        }
     }
     checkFrictionComplete();
 }
@@ -461,10 +477,15 @@ async function submitAnalysis() {
     const body = collectFormData();
     lastInput = body;
 
+    if (STATE.visualInspectionResult) {
+      body.visual_inspection = STATE.visualInspectionResult;
+    }
+
     document.getElementById('form-section').style.display = 'none';
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('report').style.display = 'none';
+    document.getElementById('loading-view').style.display = 'block';
+    document.getElementById('report-view').style.display = 'none';
     startA();
+    updateAnalysisProgress();
 
     try {
         const res = await fetch(`${API}/api/v1/analyze`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -472,14 +493,14 @@ async function submitAnalysis() {
         const data = await res.json();
         lastReport = data;
         stopA();
-        document.getElementById('loading').style.display = 'none';
+        document.getElementById('loading-view').style.display = 'none';
         renderReport(data);
-        document.getElementById('report').style.display = 'block';
+        document.getElementById('report-view').style.display = 'block';
         window.scrollTo(0, 0);
         autoSaveReport(data);
     } catch (e) {
         stopA();
-        document.getElementById('loading').style.display = 'none';
+        document.getElementById('loading-view').style.display = 'none';
         document.getElementById('form-section').style.display = 'block';
         showErr('Analysis failed: ' + e.message);
     }
@@ -494,20 +515,22 @@ function renderReport(r) {
     // Verdict
     document.getElementById('r-verdict').innerHTML = `
                 <div class="verdict-display" aria-label="Analysis verdict: ${v}">
-                    <div class="verdict-word ${v.toUpperCase()}">${esc(v).toUpperCase()}</div>
+                    <div class="verdict-word v-word ${v.toUpperCase()}">${esc(v).toUpperCase()}</div>
                     <div style="font-family:var(--font-mono); font-size:14px; margin-bottom:24px;">${esc(r.verdict_reason || '')}</div>
                     <div class="verdict-meta">
                         <span class="badge ${v === 'safe' ? 'low' : v === 'reconsider' ? 'critical' : 'high'}">CONFIDENCE: ${r.confidence_score || '?'}/10</span>
                     </div>
                 </div>`;
+    animateVerdictEntrance(document.querySelector('.v-word'));
+    renderBiasDetection(r.bias_detection);
 
-    // Research Warnings
+    // Research Warnings (staggered entrance)
     const rw = r.research_warnings || [];
     const rwDiv = document.getElementById('r-research-warnings');
     if (rw.length > 0) {
         rwDiv.style.display = 'block';
         rwDiv.innerHTML = `<div class="section-label" style="display:none;"><span>02 ·</span> RESEARCH WARNINGS</div>` +
-            rw.map(w => `<div class="research-warning ${w.severity}"><div style="font-family:var(--font-mono); font-size:10px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">${w.severity} SEVERITY</div><div style="font-size:14px; color:var(--text); margin-bottom:8px;">${esc(w.stat)}</div><div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted)">Source: ${esc(w.source)}</div></div>`).join('');
+            rw.map((w, i) => `<div class="research-warning ${w.severity} warning-enter" style="animation-delay:${i * 80}ms"><div style="font-family:var(--font-mono); font-size:10px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">${w.severity} SEVERITY</div><div style="font-size:14px; color:var(--text); margin-bottom:8px;">${esc(w.stat)}</div><div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted)">Source: ${esc(w.source)}</div></div>`).join('');
     } else { rwDiv.style.display = 'none'; }
 
     // Cashflow
@@ -575,12 +598,13 @@ function renderReport(r) {
 
     // Simple sections mapping
     document.getElementById('r-stress').innerHTML = (r.stress_scenarios || []).map(s => `
-        <div class="stress-row">
+        <div class="stress-row sc2 ${s.can_survive ? '' : 'fail'}">
             <div class="stress-indicator ${s.can_survive ? 'pass' : 'fail'}"></div>
             <div class="stress-name">${esc(s.name.replace(/_/g, ' ').toUpperCase())}</div>
             <div class="stress-key-number">${esc(s.key_number)}</div>
             <div class="stress-badge" style="color:${s.can_survive ? 'var(--green)' : 'var(--red)'}">${s.can_survive ? 'SURVIVES' : 'AT RISK'}</div>
         </div>`).join('');
+    animateStressCards();
 
     // Path to Safe
     if (r.path_to_safe) {
@@ -615,6 +639,7 @@ function renderReport(r) {
     document.getElementById('r-meta').innerHTML = `${covMsg}Analysis in ${r._meta?.pipeline_time_seconds || '?'}s · ${(r.data_sources || []).join(' · ')}`;
 
     initWhatIf(r);
+    initStickySummary(r);
 }
 
 // --- WHAT-IF SLIDERS ---
@@ -632,7 +657,7 @@ function initWhatIf(report) {
     const tn = document.getElementById('wi-tenure');
     tn.value = p.loan_tenure_years || 20;
 
-    document.getElementById('r-whatif').style.display = 'block';
+    document.getElementById('sensitivity-section').style.display = 'block';
     ['wi-dp', 'wi-price', 'wi-tenure'].forEach(id => {
         document.getElementById(id).addEventListener('input', onWhatIfSlide);
         document.getElementById(id + '-val').textContent = id === 'wi-tenure' ? document.getElementById(id).value + ' yrs' : inr(+document.getElementById(id).value);
@@ -670,8 +695,10 @@ function updateWhatIfDisplay(curr, orig) {
     const fixed = (lastInput_cached?.financial?.existing_emis || 0) + (lastInput_cached?.financial?.monthly_expenses || 0);
 
     const setM = (id, cur, ori, fmt, hBetter) => {
-        document.getElementById(id).textContent = fmt(cur);
+        const el = document.getElementById(id);
+        if (el) el.textContent = fmt(cur);
         const dEl = document.getElementById(id + '-d');
+        if (!dEl) return;
         const diff = cur - ori;
         if (Math.abs(diff) < 0.01) { dEl.textContent = ''; return; }
         const sign = diff > 0 ? '+' : '';
@@ -684,14 +711,16 @@ function updateWhatIfDisplay(curr, orig) {
     setM('wm-runway', curr.emergency_runway_months, orig.emergency_runway_months, v => v.toFixed(1) + 'mo', true);
 
     const ratioEl = document.getElementById('wm-ratio');
-    ratioEl.textContent = (curr.emi_to_income_ratio * 100).toFixed(1) + '%';
-    ratioEl.style.color = curr.emi_to_income_ratio < 0.3 ? 'var(--green)' : curr.emi_to_income_ratio < 0.45 ? 'var(--yellow)' : 'var(--red)';
+    if (ratioEl) {
+        ratioEl.textContent = (curr.emi_to_income_ratio * 100).toFixed(1) + '%';
+        ratioEl.style.color = curr.emi_to_income_ratio < 0.3 ? 'var(--green)' : curr.emi_to_income_ratio < 0.45 ? 'var(--yellow)' : 'var(--red)';
+    }
     const rDiff = curr.emi_to_income_ratio - orig.emi_to_income_ratio;
     const rDel = document.getElementById('wm-ratio-d');
-    if (Math.abs(rDiff) > 0.001) {
+    if (rDel && Math.abs(rDiff) > 0.001) {
         rDel.textContent = `${rDiff > 0 ? '+' : ''}${(rDiff * 100).toFixed(1)}% vs orig`;
         rDel.className = 'wm-delta ' + (rDiff < 0 ? 'better' : 'worse');
-    } else { rDel.textContent = ''; }
+    } else if (rDel) { rDel.textContent = ''; }
 }
 
 function resetWhatIf() { if (whatIfOriginal) initWhatIf({ computed_numbers: whatIfOriginal }); }
@@ -780,7 +809,7 @@ function renderComparisonTable(r1, r2) {
         </td>
     </tr></tbody></table>`;
 
-    document.getElementById('compare-table-container').innerHTML = html;
+    document.getElementById('compare-results').innerHTML = html;
     document.getElementById('compare-form').style.display = 'none';
     document.getElementById('compare-results').style.display = 'block';
     document.getElementById('compare-results').scrollIntoView({ behavior: 'smooth' });
@@ -972,7 +1001,7 @@ async function submitOutcome(outcome, btn) {
 }
 
 function reset() {
-    document.getElementById('report').style.display = 'none';
+    document.getElementById('report-view').style.display = 'none';
     document.getElementById('form-section').style.display = 'block';
     ['a1', 'a2', 'a3', 'a4', 'a5', 'a6'].forEach(id => setA(id, 'waiting'));
     window.scrollTo(0, 0);
@@ -1704,23 +1733,260 @@ function drawNetWorthMountain(canvas, computed, rawInput) {
   }, 1200 / years / 8);
 }
 
+// === NEW FEATURE FUNCTIONS ===
+
+/**
+ * Renders the AI integrity / bias detection card.
+ * High integrity = trust signal. Low = correction warning.
+ * Core differentiator: the AI that audits its own reasoning.
+ * @param {Object} biasResult - bias_detection from pipeline output
+ */
+function renderBiasDetection(biasResult) {
+  const el = document.getElementById('r-bias-detection');
+  if (!el || !biasResult) return;
+
+  const colorMap = {
+    green: 'var(--green)', yellow: 'var(--yellow)',
+    orange: 'var(--yellow)', red: 'var(--red)',
+  };
+  const bgMap = {
+    green: 'var(--green-bg)', yellow: 'var(--yellow-bg)',
+    orange: 'var(--yellow-bg)', red: 'var(--red-bg)',
+  };
+  const borderMap = {
+    green: 'var(--green-border)', yellow: 'var(--yellow-border)',
+    orange: 'var(--yellow-border)', red: 'var(--red-border)',
+  };
+
+  const c = biasResult.display_color || 'green';
+  const icon = biasResult.integrity_score >= 80 ? '🛡' :
+               biasResult.integrity_score >= 60 ? '⚖' : '⚠';
+
+  el.innerHTML = `
+    <div style="background:${bgMap[c]};border:1px solid ${borderMap[c]};
+         border-radius:12px;padding:14px 18px;margin-bottom:16px;
+         display:flex;align-items:flex-start;gap:14px">
+      <div style="font-size:24px;flex-shrink:0">${icon}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;
+             flex-wrap:wrap">
+          <span style="font-family:var(--font-display);font-size:12px;
+              font-weight:700;color:${colorMap[c]};letter-spacing:1px;
+              text-transform:uppercase">
+            AI Integrity: ${esc(biasResult.display_label)}
+          </span>
+          <span style="font-family:var(--font-mono);font-size:11px;
+              color:var(--text-muted)">${biasResult.integrity_score}/100</span>
+          ${biasResult.verdict_was_corrected ?
+            `<span style="font-size:10px;font-weight:700;padding:2px 8px;
+             border-radius:3px;background:var(--red-bg);color:var(--red);
+             border:1px solid var(--red-border)">VERDICT CORRECTED</span>` : ''}
+        </div>
+        <div style="font-size:12px;color:var(--text-dim);line-height:1.5">
+          ${esc(biasResult.bias_explanation ||
+            'AI reasoning aligns with mathematical analysis. No systematic bias detected.')}
+        </div>
+      </div>
+    </div>`;
+}
+
+/**
+ * Handles property photo file selection.
+ * Shows thumbnails and triggers background Gemini inspection.
+ * @param {HTMLInputElement} input - File input element
+ */
+function handlePropertyPhotos(input) {
+  const files = Array.from(input.files).slice(0, 5);
+  STATE.propertyPhotoFiles = files;
+
+  const strip = document.getElementById('photo-preview-strip');
+  strip.innerHTML = '';
+  strip.style.display = files.length ? 'flex' : 'none';
+
+  files.forEach(f => {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    img.className = 'photo-thumb';
+    strip.appendChild(img);
+  });
+
+  if (files.length) {
+    document.getElementById('photo-drop-zone').classList.add('has-photos');
+    runPropertyInspection(files);
+  }
+}
+
+/**
+ * Uploads property photos to /documents/inspect-property.
+ * Runs in background — does not block form submission.
+ * @param {File[]} files - Array of image files (max 5)
+ */
+async function runPropertyInspection(files) {
+  const statusEl = document.getElementById('photo-inspection-status');
+  if (!statusEl) return;
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = `
+    <div style="font-size:12px;color:var(--accent);padding:10px;
+         background:rgba(250,204,21,0.06);border-radius:8px;margin-top:10px">
+      <span style="animation:pulse-warn 1s infinite;display:inline-block">●</span>
+      Gemini is inspecting your photos...
+    </div>`;
+
+  const fd = new FormData();
+  files.forEach(f => fd.append('files', f));
+  fd.append('location_area', document.getElementById('location_area')?.value || 'Mumbai');
+  fd.append('property_price', document.getElementById('property_price')?.value || '0');
+
+  try {
+    const res = await fetch(`${API}/api/v1/documents/inspect-property`, {
+      method: 'POST', body: fd,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    STATE.visualInspectionResult = data;
+
+    const scoreColor = data.visual_inspection_score >= 70 ? 'var(--green)' :
+                       data.visual_inspection_score >= 50 ? 'var(--yellow)' :
+                       'var(--red)';
+    statusEl.innerHTML = `
+      <div style="padding:12px;background:var(--bg);border-radius:8px;
+           border:1px solid var(--border);margin-top:10px">
+        <div style="display:flex;justify-content:space-between;
+             align-items:center;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:700;color:var(--text)">
+            Visual Condition: ${esc(data.condition_grade)}
+          </span>
+          <span style="font-family:var(--font-mono);font-size:14px;
+               font-weight:700;color:${scoreColor}">
+            ${data.visual_inspection_score}/100
+          </span>
+        </div>
+        ${data.structural_concerns?.length ?
+          `<div style="font-size:11px;color:var(--red);margin-bottom:4px">
+             ⚠ ${esc(data.structural_concerns[0])}
+           </div>` : ''}
+        <div style="font-size:11px;color:var(--text-muted)">
+          ${esc(data.recommendation)}
+        </div>
+      </div>`;
+  } catch (e) {
+    statusEl.innerHTML = `
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px">
+        Visual inspection unavailable — analysis proceeds without images.
+      </div>`;
+  }
+}
+
+/**
+ * Animates verdict word entrance with spring scale.
+ * The single most important animation in the product.
+ * @param {HTMLElement} el - The verdict word element (.v-word)
+ */
+function animateVerdictEntrance(el) {
+  if (!el) return;
+  el.style.cssText = 'transform:scale(0.4);opacity:0;transition:none';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    el.style.cssText = (
+      'transform:scale(1);opacity:1;' +
+      'transition:transform 400ms cubic-bezier(0.34,1.56,0.64,1),' +
+      'opacity 250ms ease'
+    );
+  }));
+}
+
+/**
+ * Staggered stress card entrance with burst effect on failed cards.
+ * Implements peak-end rule: failure moments are designed, not instant.
+ */
+function animateStressCards() {
+  const cards = document.querySelectorAll('.sc2');
+  cards.forEach((card, i) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(12px)';
+    setTimeout(() => {
+      card.style.transition = 'opacity 300ms ease, transform 300ms cubic-bezier(0.34,1.56,0.64,1)';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+      if (card.classList.contains('fail')) {
+        setTimeout(() => {
+          card.classList.add('burst-active');
+          setTimeout(() => card.classList.remove('burst-active'), 600);
+        }, 200);
+      }
+    }, i * 120);
+  });
+}
+
+/**
+ * Shows live analysis progress counter during pipeline execution.
+ * Replaces static "6 agents working" with "Analysis X% complete".
+ */
+function updateAnalysisProgress() {
+  const agentIds = ['a1','a2','a3','a4','a5','a6'];
+  const interval = setInterval(() => {
+    const done = agentIds.filter(id => {
+      const el = document.getElementById(id);
+      return el && el.classList.contains('done');
+    }).length;
+    const pct = Math.round(done / agentIds.length * 100);
+    const subEl = document.querySelector('.load-sub');
+    if (subEl) {
+      subEl.textContent = pct < 100
+        ? `Analysis ${pct}% complete — ${agentIds.length - done} agents remaining`
+        : 'Composing your verdict...';
+    }
+    if (done === agentIds.length) clearInterval(interval);
+  }, 400);
+}
+
+/**
+ * Initializes sticky summary bar that appears when scrolling past verdict.
+ * @param {Object} report - Full pipeline output
+ */
+function initStickySummary(report) {
+  const verdictEl = document.getElementById('r-verdict');
+  const summaryEl = document.getElementById('sticky-summary');
+  if (!verdictEl || !summaryEl) return;
+
+  const ssVerdict = document.getElementById('ss-verdict');
+  const ssEmi = document.getElementById('ss-emi');
+  const ssRunway = document.getElementById('ss-runway');
+
+  if (ssVerdict) {
+    ssVerdict.textContent = (report.verdict || 'RISKY').toUpperCase();
+    ssVerdict.style.color = report.verdict === 'safe' ? 'var(--green)' :
+                            report.verdict === 'risky' ? 'var(--yellow)' :
+                            'var(--red)';
+  }
+  if (ssEmi) ssEmi.textContent = 'EMI ' + inr(report.computed_numbers?.monthly_emi || 0);
+  if (ssRunway) ssRunway.textContent =
+    (report.computed_numbers?.emergency_runway_months || 0).toFixed(1) + ' mo runway';
+
+  new IntersectionObserver(([entry]) => {
+    summaryEl.classList.toggle('visible', !entry.isIntersecting);
+  }, { threshold: 0.1 }).observe(verdictEl);
+}
+
 // === INITIALIZATION ===
 document.addEventListener('DOMContentLoaded', () => {
     updateFinancialHealth();
 
     // Setup Indian number formatting on financial inputs
     ['monthly_income', 'spouse_income', 'liquid_savings', 'existing_emis',
-     'monthly_expenses', 'property_price', 'down_payment_available'].forEach(id => {
+     'monthly_expenses', 'property_price', 'down_payment_available', 'current_rent'].forEach(id => {
         const el = document.getElementById(id);
         if (el) setupIndianNumberFormat(el);
     });
 
-    // Smart defaults for empty fields
+    // Smart defaults for empty fields (formatted strings)
     const smartDefaults = {
-        monthly_income: 120000,
-        liquid_savings: 2000000,
-        existing_emis: 5000,
-        monthly_expenses: 45000,
+        monthly_income: "1,20,000",
+        liquid_savings: "20,00,000",
+        existing_emis: "5,000",
+        monthly_expenses: "45,000",
+        current_rent: "25,000",
+        property_price: "85,00,000",
+        down_payment_available: "17,00,000"
     };
     Object.entries(smartDefaults).forEach(([id, val]) => {
         const el = document.getElementById(id);
@@ -1731,7 +1997,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lastReport = window.__NIV_PRELOADED_REPORT__;
         document.getElementById('form-section').style.display = 'none';
         renderReport(lastReport);
-        document.getElementById('report').style.display = 'block';
+        document.getElementById('report-view').style.display = 'block';
 
         if (window.__NIV_SHARED_MODE__) {
             const banner = document.createElement('div');
@@ -1747,7 +2013,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ].join(';');
             banner.innerHTML = 'This is a shared analysis. '
                 + '<a href="/" style="color:var(--accent);font-weight:600">Run your own →</a>';
-            document.getElementById('report').prepend(banner);
+            document.getElementById('report-view').prepend(banner);
             setTimeout(maybeShowOutcomePrompt, 3000);
         }
     }

@@ -299,21 +299,86 @@
         /* S4: Timeline labels */
         .ts-label   { font-family:var(--font-mono,monospace); font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:12px; }
         .ts-metrics { font-family:var(--font-mono,monospace); font-size:12px; display:flex; flex-direction:column; gap:4px; }
+
+        /* Verdict entrance animation */
+        .v-word {
+          display: inline-block;
+          transform-origin: center;
+        }
+
+        /* Confidence bar */
+        .confidence-track {
+          height: 3px; background: rgba(255,255,255,0.1);
+          border-radius: 2px; overflow: hidden;
+          margin-top: 10px; max-width: 200px;
+        }
+        .confidence-fill { height: 100%; border-radius: 2px; transition: none; }
+
+        /* Research warning entrance */
+        @keyframes warning-enter {
+          from { transform: translateX(-16px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        .warning-enter {
+          animation: warning-enter 350ms cubic-bezier(0.16,1,0.3,1) both;
+        }
+
+        /* Stress card burst */
+        @keyframes burst {
+          0% { transform: scale(1); }
+          25% { transform: scale(1.025); box-shadow: 0 0 0 4px rgba(239,68,68,0.2); }
+          60% { transform: scale(0.99); box-shadow: 0 0 0 8px rgba(239,68,68,0.05); }
+          100% { transform: scale(1); box-shadow: none; }
+        }
+        .sc2.fail.burst-active { animation: burst 600ms ease-out forwards; }
+
+        /* Photo upload zone */
+        .photo-drop-zone {
+          border: 2px dashed var(--border-bright); border-radius: 12px;
+          padding: 28px; text-align: center; cursor: pointer;
+          transition: border-color 0.2s, background 0.15s;
+          background: var(--bg);
+        }
+        .photo-drop-zone:hover {
+          border-color: var(--accent); background: rgba(250,204,21,0.04);
+        }
+        .photo-drop-zone.has-photos {
+          border-color: var(--green); border-style: solid;
+        }
+        .photo-thumb {
+          width: 60px; height: 60px; object-fit: cover;
+          border-radius: 8px; border: 1px solid var(--border);
+        }
+
+        /* fcard helper */
+        .fcard {
+          background: var(--surface-2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          padding: 18px 20px;
+        }
+        .fcard-title {
+          font-family: var(--font-body);
+          font-weight: 700;
+          font-size: 13px;
+          margin-bottom: 8px;
+          color: var(--text);
+        }
     </style>
 </head>
 
 <body>
 
-    <header class="hdr container">
-        <div class="hdr-left">
-            <a href="/landing.html" class="logo">NIV <em>AI</em></a>
-            <div class="hdr-sub">HOME BUYING DECISION ENGINE · MUMBAI</div>
+    <nav class="landing-nav" style="background:var(--surface); border-bottom:1px solid var(--border);">
+        <div class="nav-inner container">
+            <a href="/" class="nav-logo"><span class="nav-logo-niv">NIV</span> AI</a>
+            <div class="nav-links">
+                <span class="hdr-tag" style="margin-right:12px">6-AGENT SYSTEM</span>
+                <div class="ttc-badge" id="ttc-badge">⚡ ~2 min</div>
+            </div>
+            <a href="/" class="btn-ghost" style="margin-left:auto">Exit to Home</a>
         </div>
-        <div class="hdr-right">
-            <span class="hdr-tag">6-AGENT SYSTEM</span>
-            <div class="ttc-badge" id="ttc-badge">⚡ ~2 min</div>
-        </div>
-    </header>
+    </nav>
 
     <div class="container" id="form-section">
         <div id="err" role="alert"
@@ -361,7 +426,7 @@
             <div class="field-grid">
                 <div class="field">
                     <div class="field-group">
-                        <input type="number" id="monthly_income" value="120000" placeholder=" "
+                        <input type="text" id="monthly_income" value="1,20,000" placeholder=" "
                             oninput="updateFinancialHealth(); preview(this,'inc-p')">
                         <label class="field-label" for="monthly_income">MONTHLY INCOME (₹)</label>
                     </div>
@@ -370,7 +435,7 @@
                 </div>
                 <div class="field">
                     <div class="field-group">
-                        <input type="number" id="spouse_income" value="0" placeholder=" "
+                        <input type="text" id="spouse_income" value="0" placeholder=" "
                             oninput="updateFinancialHealth(); preview(this,'sp-p')">
                         <label class="field-label" for="spouse_income">SP/CO-BORROWER INCOME (₹)</label>
                     </div>
@@ -378,7 +443,7 @@
                 </div>
                 <div class="field">
                     <div class="field-group">
-                        <input type="number" id="liquid_savings" value="2000000" placeholder=" "
+                        <input type="text" id="liquid_savings" value="20,00,000" placeholder=" "
                             oninput="preview(this,'sav-p')">
                         <label class="field-label" for="liquid_savings">LIQUID SAVINGS (₹)</label>
                     </div>
@@ -387,14 +452,14 @@
                 </div>
                 <div class="field">
                     <div class="field-group">
-                        <input type="number" id="existing_emis" value="5000" placeholder=" "
+                        <input type="text" id="existing_emis" value="5,000" placeholder=" "
                             oninput="updateFinancialHealth()">
                         <label class="field-label" for="existing_emis">EXISTING LOAN EMIS (₹)</label>
                     </div>
                 </div>
                 <div class="field">
                     <div class="field-group">
-                        <input type="number" id="monthly_expenses" value="45000" placeholder=" "
+                        <input type="text" id="monthly_expenses" value="45,000" placeholder=" "
                             oninput="updateFinancialHealth()">
                         <label class="field-label" for="monthly_expenses">MONTHLY EXPENSES (₹)</label>
                     </div>
@@ -423,7 +488,7 @@
             <div class="field-grid">
                 <div class="field">
                     <div class="field-group">
-                        <input type="number" id="property_price" value="8500000" placeholder=" "
+                        <input type="text" id="property_price" value="85,00,000" placeholder=" "
                             oninput="updateEMIPreview(); preview(this,'pp-p')">
                         <label class="field-label" for="property_price">PROPERTY PRICE (₹)</label>
                     </div>
@@ -435,7 +500,7 @@
                 </div>
                 <div class="field">
                     <div class="field-group">
-                        <input type="number" id="down_payment_available" value="1700000" placeholder=" "
+                        <input type="text" id="down_payment_available" value="17,00,000" placeholder=" "
                             oninput="updateEMIPreview(); preview(this,'dp-p')">
                         <label class="field-label" for="down_payment_available">DOWN PAYMENT AVAILABLE (₹)</label>
                     </div>
@@ -526,7 +591,7 @@
                 </div>
                 <div class="field">
                     <div class="field-group">
-                        <input type="number" id="current_rent" value="25000" placeholder=" ">
+                        <input type="text" id="current_rent" value="25,000" placeholder=" ">
                         <label class="field-label" for="current_rent">CURRENT MONTHLY RENT (₹)</label>
                     </div>
                 </div>
@@ -568,6 +633,33 @@
                     <label class="field-label" for="possession_date">POSSESSION DATE</label>
                     <input type="text" id="possession_date" placeholder="12/2026">
                 </div>
+            </div>
+
+            <div class="fcard" style="margin-top:14px">
+              <div class="fcard-title">📸 AI Visual Inspection (Optional)</div>
+              <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+                Photograph the property — rooms, exterior, parking, stairwell.
+                Gemini's vision AI assesses visible condition and flags defects.
+                Max 5 photos. Analysis runs automatically.
+              </p>
+              <div id="photo-drop-zone" class="photo-drop-zone"
+                   onclick="document.getElementById('property-photos').click()">
+                <input type="file" id="property-photos" accept="image/*"
+                       multiple style="display:none"
+                       onchange="handlePropertyPhotos(this)">
+                <div class="photo-drop-icon" style="font-size:32px;margin-bottom:8px">📷</div>
+                <div style="font-size:14px;font-weight:600;color:var(--text-dim);
+                     margin-bottom:4px">Tap to add property photos</div>
+                <div style="font-size:11px;color:var(--text-muted)">
+                  Up to 5 · JPEG or PNG · Gemini inspects automatically
+                </div>
+              </div>
+              <div id="photo-preview-strip"
+                   style="display:none;margin-top:12px;gap:8px;flex-wrap:wrap"></div>
+              <div id="photo-inspection-status" style="display:none"></div>
+            </div>
+
+            <div class="field-grid" style="margin-top:0;margin-bottom:0">
                 <div class="field">
                     <div class="field-group">
                         <input type="number" id="commute_distance_km" value="0" placeholder=" ">
@@ -610,6 +702,7 @@
             <div class="loading-top">
                 <div class="section-label"><span>ANALYSING</span> YOUR SITUATION</div>
                 <div class="loading-title">6 agents working in parallel</div>
+                <div class="load-sub" style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-top:6px"></div>
             </div>
             <div class="loading-progress-bar">
                 <div class="loading-progress-fill"></div>
@@ -670,15 +763,63 @@
                         this property because you genuinely haven't decided yet — or because you've already emotionally
                         committed and want confirmation?</div>
                     <div style="display:flex; flex-direction:column; gap:8px;">
-                        <div class="friction-option btn-ghost" onclick="selectFriction('fq1', 'A')"
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq1', 'A', this)"
                             style="justify-content:flex-start; min-height:auto; padding:12px 16px;">I'm actually
                             undecided</div>
-                        <div class="friction-option btn-ghost" onclick="selectFriction('fq1', 'B')"
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq1', 'B', this)"
                             style="justify-content:flex-start; min-height:auto; padding:12px 16px;">I like it but
                             haven't decided</div>
-                        <div class="friction-option btn-ghost" onclick="selectFriction('fq1', 'C')"
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq1', 'C', this)"
                             style="justify-content:flex-start; min-height:auto; padding:12px 16px;">I want to validate
                             my choice</div>
+                    </div>
+                </div>
+
+                <div class="friction-question" id="fq2" style="margin-top:20px;">
+                    <div style="font-family:var(--font-body); font-size:16px; margin-bottom:16px;">How long do you plan to stay in this property? Real estate is illiquid and expensive to exit.</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq2', 'A', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">More than 10 years</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq2', 'B', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">5 to 10 years</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq2', 'C', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Less than 5 years (Risky)</div>
+                    </div>
+                </div>
+
+                <div class="friction-question" id="fq3" style="display:none; margin-top:20px;">
+                    <div style="font-family:var(--font-body); font-size:16px; margin-bottom:16px;">This is an under-construction property. Are you prepared for a 12-24 month delay?</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq3', 'A', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Yes, I have rent/stay backup</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq3', 'B', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">I can manage 6 months</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq3', 'C', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">No, I need it on time</div>
+                    </div>
+                </div>
+
+                <div class="friction-question" id="fq4" style="margin-top:20px;">
+                    <div style="font-family:var(--font-body); font-size:16px; margin-bottom:16px;">If your income stopped for 6 months, how would you pay this EMI?</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq4', 'A', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Emergency fund exists</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq4', 'B', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Partial savings / Family</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq4', 'C', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">No backup plan</div>
+                    </div>
+                </div>
+
+                <div class="friction-question" id="fq5" style="display:none; margin-top:20px;">
+                    <div style="font-family:var(--font-body); font-size:16px; margin-bottom:16px;">Have you checked this builder's track record for quality and delivery?</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq5', 'A', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Thoroughly checked</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq5', 'B', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Some research done</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq5', 'C', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Just going by brand</div>
                     </div>
                 </div>
             </div>
@@ -690,10 +831,9 @@
                 <span class="cm-seg" id="cm-5"></span>
             </div>
             <div class="gate-actions">
-                <button class="btn-primary" onclick="proceedFromFriction()" id="friction-proceed" disabled>
+                <button class="btn-primary" onclick="proceedFromFriction()" id="friction-proceed" disabled style="width:100%">
                     Proceed to Analysis &rarr;
                 </button>
-                <button class="btn-text" onclick="closeFrictionGate()">Skip checks</button>
             </div>
         </div>
     </div>
@@ -704,6 +844,7 @@
         <div id="r-verdict" class="report-section verdict-pulse">
             <div class="confidence-bar"><div class="confidence-fill" id="conf-fill" style="width:0%"></div></div>
         </div>
+        <div id="r-bias-detection"></div>
         <div id="r-research-warnings" class="report-section" style="display:none;"></div>
 
         <div id="share-bar" class="report-section" style="display:none">

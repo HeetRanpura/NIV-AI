@@ -19,17 +19,9 @@ from pydantic import BaseModel
 
 from backend.agents.pipeline import run_analysis
 from backend.calculations.benchmarks import get_area_benchmark_result
-from backend.calculations.delta_engine import compute_delta
-from backend.calculations.financial import compute_all
-from backend.calculations.risk_engine import (
-    classify_financial_state,
-    compute_affordability_envelope,
-    compute_confidence_score,
-    compute_stability_score,
-    compute_survival_timeline,
-    evaluate_risk,
-    get_action_plan,
-)
+from backend.calculations.delta_engine import classify_financial_state, compute_delta, compute_survival_timeline
+from backend.calculations.financial import compute_all, compute_affordability_envelope, compute_confidence_score, compute_stability_score
+from backend.calculations.risk_engine import evaluate_risk, get_action_plan
 from backend.models.input_models import AnalysisRequest
 from backend.utils.rate_limit import limiter
 
@@ -46,9 +38,13 @@ _MARKET_RATES_FALLBACK = {
     "kotak_rate": 8.90,
     "min_rate": 8.50,
     "max_rate": 9.90,
+    # Aliases used by frontend
+    "market_floor": 8.50,
+    "market_ceiling": 9.90,
     "rbi_repo_rate": 6.50,
     "last_updated": "April 2026",
     "source": "Static reference — verify with your bank",
+    "data_source": "Static reference — verify with your bank",
     "disclaimer": "Rates are indicative. Final rate depends on CIBIL score and bank policy.",
 }
 
@@ -123,13 +119,30 @@ async def analyze(request: Request, body: AnalysisRequest):
         result = await run_analysis(raw_input)
 
         # Deterministic enrichment — no LLM, no latency cost
+        # (pipeline already populates these; we overwrite with more-detailed router-level calls)
         computed, fin, prop = _build_computed(body)
         monthly_expenses = fin.monthly_expenses if fin.monthly_expenses > 0 else round(fin.monthly_income * 0.40, 2)
+        computed_dict = computed.to_dict()
 
-        result["risk_evaluation"] = evaluate_risk(computed)
-        result["financial_state"] = classify_financial_state(computed)
-        result["confidence_score_details"] = compute_confidence_score(computed)
-        result["stability_score"] = compute_stability_score(computed)
+        risk_eval = evaluate_risk(computed_dict, raw_input)
+        result["risk_evaluation"] = risk_eval
+        result["financial_state"] = classify_financial_state(computed_dict)
+
+        bm = get_area_benchmark_result(prop.location_area)
+        result["confidence_score_details"] = compute_confidence_score(
+            raw_input=raw_input.get("financial", {}) | raw_input.get("property", {}),
+            assumptions_made=computed_dict.get("assumptions_made", []),
+            benchmark_coverage=bm.coverage_level,
+        )
+        result["stability_score"] = compute_stability_score(
+            base_computed=computed_dict,
+            monthly_income=fin.monthly_income,
+            property_price=prop.property_price,
+            down_payment=prop.down_payment_available,
+            interest_rate=prop.expected_interest_rate,
+            loan_tenure_years=prop.loan_tenure_years,
+            spouse_income=fin.spouse_income,
+        )
         result["affordability_envelope"] = compute_affordability_envelope(
             monthly_income=fin.monthly_income,
             spouse_income=fin.spouse_income,
@@ -138,9 +151,22 @@ async def analyze(request: Request, body: AnalysisRequest):
             liquid_savings=fin.liquid_savings,
             interest_rate=prop.expected_interest_rate,
             loan_tenure_years=prop.loan_tenure_years,
+            property_price=prop.property_price,
+            down_payment=prop.down_payment_available,
         )
-        result["survival_timeline"] = compute_survival_timeline(computed)
-        result["action_plan"] = get_action_plan(computed)
+        monthly_burn = (
+            computed.monthly_ownership.total
+            + fin.existing_emis
+            + monthly_expenses
+        )
+        result["survival_timeline"] = compute_survival_timeline(
+            monthly_income=fin.monthly_income + fin.spouse_income,
+            monthly_burn=monthly_burn,
+            liquid_savings=fin.liquid_savings,
+            post_purchase_savings=computed.post_purchase_savings,
+            monthly_emi=computed_dict["monthly_emi"],
+        )
+        result["action_plan"] = get_action_plan(risk_eval, computed_dict)
 
         return result
     except ValueError as e:

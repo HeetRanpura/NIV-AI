@@ -18,6 +18,9 @@ from backend.agents import property_analyst, assumption_challenger, decision_com
 from backend.calculations.benchmarks import get_maintenance_estimate, get_rental_yield, get_area_benchmark_result
 from backend.calculations.financial import compute_all, find_path_to_safe
 from backend.calculations.research_thresholds import get_triggered_research_stats
+from backend.calculations.delta_engine import classify_financial_state, compute_survival_timeline
+from backend.calculations.risk_engine import evaluate_risk, get_action_plan
+from backend.calculations.bias_detector import detect_verdict_bias
 from backend.llm.client import LLMClient
 
 logger = logging.getLogger(__name__)
@@ -45,6 +48,21 @@ async def run_analysis(raw_input: dict) -> dict:
         equivalent_rent=equivalent_rent,
         commute_distance_km=prop.get("commute_distance_km", 0.0))
     computed_dict = computed.to_dict()
+
+    financial_state = classify_financial_state(computed_dict)
+
+    monthly_burn = (
+        computed.monthly_ownership.total
+        + fin["existing_emis"]
+        + fin["monthly_expenses"]
+    )
+    survival_timeline = compute_survival_timeline(
+        fin["monthly_income"] + fin["spouse_income"],
+        monthly_burn,
+        fin["liquid_savings"],
+        computed_dict["post_purchase_savings"],
+        computed_dict["monthly_emi"],
+    )
 
     research_warnings = get_triggered_research_stats(computed_dict, raw_input)
 
@@ -88,6 +106,27 @@ async def run_analysis(raw_input: dict) -> dict:
 
     final_verdict = verdict.get("verdict", "risky")
 
+    # Bias detection — ground truth check against deterministic math
+    stress_passed_count = sum(1 for s in computed.stress_scenarios if s.can_survive)
+    bias_result = detect_verdict_bias(
+        llm_verdict=final_verdict,
+        llm_confidence_score=verdict.get("confidence_score", 5),
+        deterministic_state=financial_state,
+        deterministic_confidence={},
+        stress_passed=stress_passed_count,
+        stress_total=len(computed.stress_scenarios),
+    )
+    if bias_result["verdict_was_corrected"] and bias_result["bias_score"] >= 60:
+        logger.warning(
+            "High bias detected (score=%d, type=%s) overriding %s → %s",
+            bias_result["bias_score"], bias_result["bias_type"],
+            final_verdict, bias_result["corrected_verdict"],
+        )
+        final_verdict = bias_result["corrected_verdict"]
+
+    risk_eval = evaluate_risk(computed_dict, raw_input)
+    action_plan = get_action_plan(risk_eval, computed_dict)
+
     # Path-to-safe reverse calculator — only when verdict is not safe
     base_params = {
         "monthly_income": fin["monthly_income"], "spouse_income": fin["spouse_income"],
@@ -129,6 +168,11 @@ async def run_analysis(raw_input: dict) -> dict:
             "confidence_score": benchmark_result.confidence_score,
             "warning": benchmark_result.warning_message,
         },
+        "financial_state": financial_state,
+        "survival_timeline": survival_timeline,
+        "bias_detection": bias_result,
+        "risk_evaluation": risk_eval,
+        "action_plan": action_plan,
         "data_sources": ["Mumbai benchmark data Q4 2025", "Indian income tax rules (80C, 24b)",
                          "Maharashtra stamp duty rates", "RBI home loan guidelines"],
         "limitations": ["Legal title not verified", "Builder financials not assessed",
