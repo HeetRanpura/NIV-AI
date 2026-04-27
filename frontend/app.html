@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIV AI — Home Buying Decision Engine</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --anim-fast: 150ms;
+            --anim-base: 250ms;
+            --anim-slow: 400ms;
+            --anim-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --anim-ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-accent: 0 0 24px rgba(124, 106, 247, 0.15);
+            --pulse-safe: rgba(34, 197, 94, 0.12);
+            --pulse-warn: rgba(245, 158, 11, 0.12);
+            --pulse-crit: rgba(239, 68, 68, 0.12);
+        }
+
+        /* TTc badge */
+        .ttc-badge {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            padding: 4px 10px;
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+        body.report-visible .ttc-badge { display: none; }
+
+        /* Wizard connector filled state */
+        .w-connector.filled .w-fill,
+        .wizard-connector.filled .w-fill {
+            background: var(--accent);
+            transition: width var(--anim-slow) var(--anim-ease);
+        }
+
+        /* Floating label field group */
+        .field-group {
+            position: relative;
+        }
+        .field-group input,
+        .field-group select,
+        .field-group textarea {
+            padding-top: 22px;
+            padding-bottom: 6px;
+        }
+        .field-group .field-label {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            color: var(--text-dim);
+            pointer-events: none;
+            transition:
+                top var(--anim-base) var(--anim-ease),
+                transform var(--anim-base) var(--anim-ease),
+                font-size var(--anim-base) var(--anim-ease),
+                letter-spacing var(--anim-base) var(--anim-ease);
+        }
+        .field-group input:focus ~ .field-label,
+        .field-group input:not(:placeholder-shown) ~ .field-label,
+        .field-group select:focus ~ .field-label,
+        .field-group select:not([value=""]) ~ .field-label,
+        .field-group textarea:focus ~ .field-label,
+        .field-group textarea:not(:placeholder-shown) ~ .field-label {
+            top: 8px;
+            transform: translateY(0);
+            font-size: 9px;
+            letter-spacing: 0.06em;
+        }
+
+        /* Keyframe animations */
+        @keyframes card-enter {
+            from { transform: scale(0.92) translateY(8px); opacity: 0; }
+            to   { transform: scale(1)    translateY(0px); opacity: 1; }
+        }
+        @keyframes indeterminate {
+            from { transform: translateX(-100%); }
+            to   { transform: translateX(400%); }
+        }
+        @keyframes risk-burst {
+            0%,100% { transform: scale(1);    box-shadow: none; }
+            50%      { transform: scale(1.1); box-shadow: 0 0 16px rgba(239,68,68,0.5); }
+        }
+        @keyframes pulse-safe {
+            0%,100% { box-shadow: 0 0 0 0   var(--pulse-safe); }
+            50%      { box-shadow: 0 0 0 12px transparent; }
+        }
+        @keyframes pulse-warn {
+            0%,100% { box-shadow: 0 0 0 0   var(--pulse-warn); }
+            50%      { box-shadow: 0 0 0 12px transparent; }
+        }
+        @keyframes pulse-crit {
+            0%,100% { box-shadow: 0 0 0 0   var(--pulse-crit); }
+            50%      { box-shadow: 0 0 0 12px transparent; }
+        }
+        @keyframes delta-pop {
+            0%   { transform: scale(0.5); opacity: 0; }
+            70%  { transform: scale(1.15); }
+            100% { transform: scale(1);   opacity: 1; }
+        }
+        @keyframes border-march {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Step card enter animation */
+        .step-card.active {
+            animation: card-enter var(--anim-base) var(--anim-ease) both;
+        }
+
+        /* Loading progress bar */
+        .loading-progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-bottom: 32px;
+            position: relative;
+        }
+        .loading-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 99px;
+            width: 30%;
+            animation: indeterminate 1.6s ease infinite;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+        }
+
+
+        /* Sticky summary bar */
+        .sticky-summary {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            transform: translateY(100%);
+            transition: transform var(--anim-base) var(--anim-ease);
+            z-index: 100 !important;
+        }
+        .sticky-summary.visible {
+            transform: translateY(0);
+        }
+        .sticky-summary button {
+            margin-left: auto;
+        }
+
+        /* Timeline / scenario grid */
+        .ts-track {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        .timeline-scenarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        /* PONR timeline */
+        .ponr-timeline {
+            position: relative;
+            height: 60px;
+        }
+        .ponr-segments {
+            display: flex;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        /* Burn clock SVG */
+        .burn-clock svg {
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Market rates banner */
+        .rates-banner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding: 10px 14px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+        .rates-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            flex-shrink: 0;
+            animation: pulse-safe 2s ease infinite;
+        }
+
+        /* Tooltip */
+        [data-tooltip] { position: relative; cursor: default; }
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity var(--anim-fast);
+            z-index: 10;
+        }
+        [data-tooltip]:hover::after { opacity: 1; }
+
+        /* Friction dots */
+        .friction-dots {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .fdot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: transparent;
+            transition: background var(--anim-base), border-color var(--anim-base);
+        }
+        .fdot.done {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .fdot.current {
+            transform: scale(1.15);
+            border-color: var(--text);
+        }
+
+        /* Concern meter */
+        .concern-meter {
+            display: flex;
+            gap: 4px;
+            height: 4px;
+            margin-top: 20px;
+        }
+        .cm-seg {
+            flex: 1;
+            background: var(--border);
+            border-radius: 2px;
+            transition: background var(--anim-base);
+        }
+
+        /* EMI arc SVG */
+        .arc-track { opacity: 0.3; }
+        .arc-fill {
+            transition:
+                stroke-dashoffset var(--anim-slow) var(--anim-ease),
+                stroke var(--anim-base);
+        }
+
+        /* S4: Verdict pulse classes */
+        .verdict-pulse.safe       { animation: pulse-safe  3s   infinite; }
+        .verdict-pulse.risky      { animation: pulse-warn  2s   infinite; }
+        .verdict-pulse.reconsider { animation: pulse-crit  1.5s infinite; }
+        .confidence-bar  { height:4px; background:var(--border); border-radius:2px; margin-top:12px; overflow:hidden; }
+        .confidence-fill { height:100%; background:var(--accent); border-radius:2px; transition:width 1s ease; }
+
+        /* S4: Scorecard stagger */
+        #r-scorecard .scorecard-item:nth-child(1) { animation-delay:   0ms; }
+        #r-scorecard .scorecard-item:nth-child(2) { animation-delay:  60ms; }
+        #r-scorecard .scorecard-item:nth-child(3) { animation-delay: 120ms; }
+        #r-scorecard .scorecard-item:nth-child(4) { animation-delay: 180ms; }
+        #r-scorecard .scorecard-item:nth-child(5) { animation-delay: 240ms; }
+        #r-scorecard .scorecard-item:nth-child(6) { animation-delay: 300ms; }
+
+        /* S4: Burn clock text */
+        .burn-num { font-family:var(--font-mono,monospace); font-size:13px; fill:var(--text,#e2e8f0); font-weight:700; }
+
+        /* S4: Stress burst */
+        .stress-burst-target { transition:transform .15s ease, box-shadow .15s ease; }
+        .stress-burst-target.burst { transform:scale(1.02); box-shadow:0 0 0 2px var(--accent); }
+
+        /* S4: Path-to-safe green accent */
+        #r-path-to-safe { border-left:3px solid var(--green,#22c55e); padding-left:16px; }
+
+        /* S4: Reasoning split */
+        .reasoning { color:var(--text); font-size:14px; line-height:1.7; }
+
+        /* S4: Timeline labels */
+        .ts-label   { font-family:var(--font-mono,monospace); font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:12px; }
+        .ts-metrics { font-family:var(--font-mono,monospace); font-size:12px; display:flex; flex-direction:column; gap:4px; }
+
+        /* Verdict entrance animation */
+        .v-word {
+          display: inline-block;
+          transform-origin: center;
+        }
+
+        /* Confidence bar */
+        .confidence-track {
+          height: 3px; background: rgba(255,255,255,0.1);
+          border-radius: 2px; overflow: hidden;
+          margin-top: 10px; max-width: 200px;
+        }
+        .confidence-fill { height: 100%; border-radius: 2px; transition: none; }
+
+        /* Research warning entrance */
+        @keyframes warning-enter {
+          from { transform: translateX(-16px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        .warning-enter {
+          animation: warning-enter 350ms cubic-bezier(0.16,1,0.3,1) both;
+        }
+
+        /* Stress card burst */
+        @keyframes burst {
+          0% { transform: scale(1); }
+          25% { transform: scale(1.025); box-shadow: 0 0 0 4px rgba(239,68,68,0.2); }
+          60% { transform: scale(0.99); box-shadow: 0 0 0 8px rgba(239,68,68,0.05); }
+          100% { transform: scale(1); box-shadow: none; }
+        }
+        .sc2.fail.burst-active { animation: burst 600ms ease-out forwards; }
+
+        /* Photo upload zone */
+        .photo-drop-zone {
+          border: 2px dashed var(--border-bright); border-radius: 12px;
+          padding: 28px; text-align: center; cursor: pointer;
+          transition: border-color 0.2s, background 0.15s;
+          background: var(--bg);
+        }
+        .photo-drop-zone:hover {
+          border-color: var(--accent); background: rgba(250,204,21,0.04);
+        }
+        .photo-drop-zone.has-photos {
+          border-color: var(--green); border-style: solid;
+        }
+        .photo-thumb {
+          width: 60px; height: 60px; object-fit: cover;
+          border-radius: 8px; border: 1px solid var(--border);
+        }
+
+        /* fcard helper */
+        .fcard {
+          background: var(--surface-2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          padding: 18px 20px;
+        }
+        .fcard-title {
+          font-family: var(--font-body);
+          font-weight: 700;
+          font-size: 13px;
+          margin-bottom: 8px;
+          color: var(--text);
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+
+    <div class="container" id="form-section" style="padding-top: 160px;">
+
+
+        <div id="err" role="alert"
+            style="display:none; color:var(--red); padding:16px; border-left:3px solid var(--red); background:var(--surface-2); margin-bottom:24px;">
+        </div>
+
+        <div class="glass-wizard-nav">
+            <div class="wizard-pill-inner">
+                <a href="/" class="pill-logo"><span class="nav-logo-niv">NIV</span> AI</a>
+                <div class="wizard-progress-bar-wrap">
+                    <div class="wizard-track">
+                        <div class="wizard-fill-line" id="wizard-fill-bar"></div>
+                        <div class="wizard-checkpoint cp-1 active" data-cp="1"></div>
+                        <div class="wizard-checkpoint cp-2" data-cp="2"></div>
+                        <div class="wizard-checkpoint cp-3" data-cp="3"></div>
+                    </div>
+    
+                    <div class="wizard-labels">
+                        <div class="w-label-glass active" data-step-nav="1" onclick="goStep(1)">FINANCE</div>
+                        <div class="w-label-glass" data-step-nav="2" onclick="goStep(2)">PROPERTY</div>
+                        <div class="w-label-glass" data-step-nav="3" onclick="goStep(3)">DETAILS</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Step 1 -->
+        <div class="step-card active" data-step="1">
+            <div class="step-heading">
+                <div class="section-label"><span>01 ·</span> YOUR FINANCIAL PICTURE</div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <div class="field-group">
+                        <input type="text" id="monthly_income" value="1,20,000" placeholder=" "
+                            oninput="updateFinancialHealth(); preview(this,'inc-p')">
+                        <label class="field-label" for="monthly_income">MONTHLY INCOME (₹)</label>
+                    </div>
+                    <div class="field-hint">Your in-hand monthly salary</div>
+                    <div id="inc-p" class="field-hint" style="color:var(--text-dim)"></div>
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="text" id="spouse_income" value="0" placeholder=" "
+                            oninput="updateFinancialHealth(); preview(this,'sp-p')">
+                        <label class="field-label" for="spouse_income">SP/CO-BORROWER INCOME (₹)</label>
+                    </div>
+                    <div id="sp-p" class="field-hint" style="color:var(--text-dim)"></div>
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="text" id="liquid_savings" value="20,00,000" placeholder=" "
+                            oninput="preview(this,'sav-p')">
+                        <label class="field-label" for="liquid_savings">LIQUID SAVINGS (₹)</label>
+                    </div>
+                    <div class="field-hint">Include: savings accounts, FDs, stocks.</div>
+                    <div id="sav-p" class="field-hint" style="color:var(--text-dim)"></div>
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="text" id="existing_emis" value="5,000" placeholder=" "
+                            oninput="updateFinancialHealth()">
+                        <label class="field-label" for="existing_emis">EXISTING LOAN EMIS (₹)</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="text" id="monthly_expenses" value="45,000" placeholder=" "
+                            oninput="updateFinancialHealth()">
+                        <label class="field-label" for="monthly_expenses">MONTHLY EXPENSES (₹)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="health-bar" id="financial-health-indicator">
+                <div class="health-label">MONTHLY SAVINGS CAPACITY</div>
+                <div class="health-value" id="financial-health">₹—</div>
+                <div class="health-track">
+                    <div class="health-fill" id="health-fill-bar"></div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+                <button class="btn-primary" onclick="goStep(2)">Next: Property Details &rarr;</button>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card" data-step="2">
+            <div class="step-heading">
+                <div class="section-label"><span>02 ·</span> THE PROPERTY</div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <div class="field-group">
+                        <input type="text" id="property_price" value="85,00,000" placeholder=" "
+                            oninput="updateEMIPreview(); preview(this,'pp-p')">
+                        <label class="field-label" for="property_price">PROPERTY PRICE (₹)</label>
+                    </div>
+                    <div id="pp-p" class="field-hint" style="color:var(--text-dim)"></div>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="location_area">LOCATION / AREA</label>
+                    <input type="text" id="location_area" value="Andheri West" placeholder="Andheri West">
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="text" id="down_payment_available" value="17,00,000" placeholder=" "
+                            oninput="updateEMIPreview(); preview(this,'dp-p')">
+                        <label class="field-label" for="down_payment_available">DOWN PAYMENT AVAILABLE (₹)</label>
+                    </div>
+                    <div id="dp-p" class="field-hint" style="color:var(--text-dim)"></div>
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="number" id="loan_tenure_years" value="20" min="1" max="30" placeholder=" "
+                            oninput="updateEMIPreview()">
+                        <label class="field-label" for="loan_tenure_years">LOAN TENURE (YEARS)</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="number" id="expected_interest_rate" value="8.5" step="0.1" placeholder=" "
+                            oninput="updateEMIPreview()">
+                        <label class="field-label" for="expected_interest_rate">EXPECTED INTEREST RATE (%)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="emi-preview" id="emi-preview-card">
+                <div class="section-label"><span>ESTIMATED MONTHLY IMPACT</span></div>
+                <div class="metric-grid" style="grid-template-columns: repeat(2,1fr) repeat(2,1fr)">
+                    <div class="metric-cell">
+                        <div class="metric-label">LOAN AMOUNT</div>
+                        <div class="metric-number" id="ep-loan">₹—</div>
+                    </div>
+                    <div class="metric-cell">
+                        <div class="metric-label">ESTIMATED EMI</div>
+                        <div class="metric-number" id="ep-emi">₹—</div>
+                    </div>
+                    <div class="metric-cell">
+                        <div class="metric-label">EMI / INCOME</div>
+                        <div class="metric-number" id="ep-ratio">—%</div>
+                    </div>
+                    <div class="metric-cell">
+                        <div class="metric-label">MONTHLY SURPLUS</div>
+                        <div class="metric-number" id="ep-surplus">₹—</div>
+                    </div>
+                </div>
+                <div class="emi-zone-label" id="ep-zone"></div>
+
+                <svg id="emi-arc" viewBox="0 0 200 110" style="width:100%;max-width:240px;display:block;margin:16px auto 0">
+                    <path class="arc-track" d="M 20,100 A 80,80 0 0,1 180,100"
+                          fill="none" stroke="var(--border)" stroke-width="8"
+                          stroke-linecap="round"/>
+                    <path class="arc-fill" id="arc-fill-path"
+                          d="M 20,100 A 80,80 0 0,1 180,100"
+                          fill="none" stroke="var(--green)" stroke-width="8"
+                          stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251"/>
+                    <text id="arc-label" x="100" y="90" text-anchor="middle"
+                          font-family="var(--font-mono)" font-size="22" fill="var(--text)">—%</text>
+                </svg>
+            </div>
+
+            <div class="rates-banner" id="market-rates-banner" style="display:none">
+                <span class="rates-dot"></span>
+                <span id="market-rates-text">Loading rates...</span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:32px;">
+                <button class="btn-ghost" onclick="goStep(1)">&larr; Back</button>
+                <button class="btn-primary" onclick="goStep(3)">Next: Final Details &rarr;</button>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card" data-step="3">
+            <div class="step-heading">
+                <div class="section-label"><span>03 ·</span> ADDITIONAL DETAILS</div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label class="field-label" for="employment_type">EMPLOYMENT TYPE</label>
+                    <select id="employment_type">
+                        <option value="salaried">Salaried</option>
+                        <option value="freelance">Freelance / Consulting</option>
+                        <option value="business">Business Owner</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="number" id="years_in_current_job" value="3" step="0.5" placeholder=" ">
+                        <label class="field-label" for="years_in_current_job">YEARS IN CURRENT JOB</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="number" id="expected_annual_growth_pct" value="8" step="0.5" placeholder=" ">
+                        <label class="field-label" for="expected_annual_growth_pct">EXPECTED INCOME GROWTH (%)</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="text" id="current_rent" value="25,000" placeholder=" ">
+                        <label class="field-label" for="current_rent">CURRENT MONTHLY RENT (₹)</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="number" id="dependents" value="1" min="0" placeholder=" ">
+                        <label class="field-label" for="dependents">NUMBER OF DEPENDENTS</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="configuration">CONFIGURATION</label>
+                    <select id="configuration">
+                        <option value="1BHK">1 BHK</option>
+                        <option value="2BHK" selected>2 BHK</option>
+                        <option value="3BHK">3 BHK</option>
+                        <option value="4BHK">4 BHK</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <div class="field-group">
+                        <input type="number" id="carpet_area_sqft" value="650" placeholder=" ">
+                        <label class="field-label" for="carpet_area_sqft">CARPET AREA (SQFT)</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="is_ready_to_move">READY TO MOVE IN?</label>
+                    <select id="is_ready_to_move">
+                        <option value="true">Yes</option>
+                        <option value="false" selected>No</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="is_rera_registered">RERA REGISTERED?</label>
+                    <select id="is_rera_registered">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                        <option value="null">Don't Know</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="builder_name">BUILDER NAME</label>
+                    <input type="text" id="builder_name" value="Oberoi Realty">
+                </div>
+                <div class="field">
+                    <label class="field-label" for="builder_gstin">BUILDER GSTIN</label>
+                    <input type="text" id="builder_gstin" placeholder="27AAXXX1234X1Z5"
+                        oninput="this.value = this.value.toUpperCase()">
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                        <button type="button" class="btn-ghost" id="gst-check-btn" onclick="checkBuilderGST()">Verify GST</button>
+                        <div id="gst-result" class="field-hint"></div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="rera_number">RERA NUMBER <span class="field-hint">(optional)</span></label>
+                    <input type="text" id="rera_number" placeholder="P51800012345"
+                        oninput="this.value = this.value.toUpperCase()">
+                </div>
+                <div class="field">
+                    <label class="field-label" for="possession_date">POSSESSION DATE</label>
+                    <input type="text" id="possession_date" placeholder="12/2026">
+                </div>
+            </div>
+
+            <div class="fcard" style="margin-top:14px">
+              <div class="fcard-title">📸 AI Visual Inspection (Optional)</div>
+              <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+                Photograph the property — rooms, exterior, parking, stairwell.
+                Gemini's vision AI assesses visible condition and flags defects.
+                Max 5 photos. Analysis runs automatically.
+              </p>
+              <div id="photo-drop-zone" class="photo-drop-zone"
+                   onclick="document.getElementById('property-photos').click()">
+                <input type="file" id="property-photos" accept="image/*"
+                       multiple style="display:none"
+                       onchange="handlePropertyPhotos(this)">
+                <div class="photo-drop-icon" style="font-size:32px;margin-bottom:8px">📷</div>
+                <div style="font-size:14px;font-weight:600;color:var(--text-dim);
+                     margin-bottom:4px">Tap to add property photos</div>
+                <div style="font-size:11px;color:var(--text-muted)">
+                  Up to 5 · JPEG or PNG · Gemini inspects automatically
+                </div>
+              </div>
+              <div id="photo-preview-strip"
+                   style="display:none;margin-top:12px;gap:8px;flex-wrap:wrap"></div>
+              <div id="photo-inspection-status" style="display:none"></div>
+            </div>
+
+            <div class="field-grid" style="margin-top:0;margin-bottom:0">
+                <div class="field">
+                    <div class="field-group">
+                        <input type="number" id="commute_distance_km" value="0" placeholder=" ">
+                        <label class="field-label" for="commute_distance_km">COMMUTE DISTANCE (KM)</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="buyer_gender">BUYER GENDER</label>
+                    <select id="buyer_gender">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="is_first_property">FIRST PROPERTY?</label>
+                    <select id="is_first_property">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="financial_notes">FINANCIAL NOTES</label>
+                    <input type="text" id="financial_notes" placeholder="Optional">
+                </div>
+                <div class="field">
+                    <label class="field-label" for="property_notes">PROPERTY NOTES</label>
+                    <input type="text" id="property_notes" placeholder="Optional">
+                </div>
+            </div>
+
+            <div class="fcard" style="margin-top:14px">
+              <div class="fcard-title">RERA QR Scan (Optional)</div>
+              <div id="rera-qr-drop" class="photo-drop-zone"
+                   onclick="document.getElementById('rera-qr-input').click()">
+                <input type="file" id="rera-qr-input" accept="image/*"
+                       style="display:none" onchange="scanReraQR(this)">
+                <div class="photo-drop-icon" style="font-size:28px;margin-bottom:8px">QR</div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:4px">
+                  Upload RERA QR code photo
+                </div>
+                <div id="rera-qr-status" style="font-size:11px;color:var(--text-muted)">
+                  From brochure, site board, or builder material
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:32px;">
+                <button class="btn-ghost" onclick="goStep(2)">&larr; Back</button>
+                <button class="btn-primary" onclick="onSubmitClick()">Run Full Analysis &rarr;</button>
+            </div>
+        </div>
+
+        <div class="lang-toggle" style="margin-top:40px; margin-bottom:24px; display:flex; align-items:center; justify-content:center; gap:24px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span class="lang-label">OUTPUT LANGUAGE</span>
+                <div class="lang-options">
+                    <button class="lang-btn active" onclick="setLang('english',this)">EN</button>
+                    <button class="lang-btn" onclick="setLang('hindi',this)">हि</button>
+                    <button class="lang-btn" onclick="setLang('marathi',this)">म</button>
+                </div>
+            </div>
+            <button type="button" class="btn-ghost" onclick="loadDemoScenario()"
+                    style="font-size:12px;opacity:0.7;padding:0 12px;min-height:32px;">Load Sample scenario ↗</button>
+        </div>
+
+
+        <div style="text-align:center; padding-bottom: 24px;">
+            <a href="#" onclick="showAllSteps(event)"
+                style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-faint); text-decoration:none;">Show
+                all fields at once</a>
+        </div>
+
+    </div>
+
+    <!-- Loading View -->
+    <div id="loading-view" class="view" style="display:none">
+        <div class="loading-screen">
+            <div class="loading-top">
+                <div class="section-label"><span>ANALYSING</span> YOUR SITUATION</div>
+                <div class="loading-title">6 agents working in parallel</div>
+                <div class="loading-eta-note">All 6 agents run simultaneously to build your full audit report — this depth takes <span class="loading-eta-val mono" id="loading-eta">~30–45 seconds</span>. Please wait.</div>
+            </div>
+            <div class="loading-progress-bar">
+                <div class="loading-progress-fill" id="loading-progress-fill"></div>
+            </div>
+            <div class="agent-list">
+                <div class="agent-row">
+                    <div class="agent-dot" id="a1-dot"></div>
+                    <div class="agent-label">Context Synthesizer</div>
+                    <div class="agent-status-text" id="a1">waiting</div>
+                </div>
+                <div class="agent-row">
+                    <div class="agent-dot" id="a2-dot"></div>
+                    <div class="agent-label">Financial Analyst</div>
+                    <div class="agent-status-text" id="a2">waiting</div>
+                </div>
+                <div class="agent-row">
+                    <div class="agent-dot" id="a3-dot"></div>
+                    <div class="agent-label">Risk Simulator</div>
+                    <div class="agent-status-text" id="a3">waiting</div>
+                </div>
+                <div class="agent-row">
+                    <div class="agent-dot" id="a4-dot"></div>
+                    <div class="agent-label">Property Analyst</div>
+                    <div class="agent-status-text" id="a4">waiting</div>
+                </div>
+                <div class="agent-row">
+                    <div class="agent-dot" id="a5-dot"></div>
+                    <div class="agent-label">Assumption Challenger</div>
+                    <div class="agent-status-text" id="a5">waiting</div>
+                </div>
+                <div class="agent-row">
+                    <div class="agent-dot" id="a6-dot"></div>
+                    <div class="agent-label">Decision Composer</div>
+                    <div class="agent-status-text" id="a6">waiting</div>
+                </div>
+            </div>
+            <div class="processing-insight">
+                <div class="processing-insight-label">While We Process</div>
+                <div class="processing-insight-quote" id="loading-quote">A good property decision is usually won at entry price, not at brochure quality.</div>
+                <div class="processing-insight-note" id="loading-quote-note">We are checking affordability, resilience, downside scenarios, and property signals in parallel.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Friction Gate (Behavioral checks) -->
+    <div id="friction-gate" style="display:none" class="gate-overlay">
+        <div class="gate-inner">
+            <div class="friction-dots" id="friction-dots">
+                <span class="fdot" id="fd-1"></span>
+                <span class="fdot" id="fd-2"></span>
+                <span class="fdot" id="fd-3"></span>
+                <span class="fdot" id="fd-4"></span>
+                <span class="fdot" id="fd-5"></span>
+            </div>
+            <div class="gate-header">
+                <div class="section-label"><span>PRE-ANALYSIS ·</span> 5 REALITY CHECKS</div>
+                <div class="gate-title">Before we analyze — answer honestly.</div>
+                <div class="gate-subtitle">These help us identify cognitive blind spots. Takes 60 seconds.</div>
+            </div>
+            <div class="gate-progress-card">
+                <div class="gate-progress-top">
+                    <span class="gate-progress-label" id="friction-stage-label">Question 1 of 5</span>
+                    <span class="gate-progress-count" id="friction-progress-count">0 / 1 answered</span>
+                </div>
+                <div class="gate-progress-copy" id="friction-progress-copy">Answer this reality check to move to the next one.</div>
+            </div>
+            <div class="gate-questions" id="friction-questions">
+                <div class="friction-question active" id="fq1">
+                    <div class="friction-question-text">Are you analyzing
+                        this property because you genuinely haven't decided yet — or because you've already emotionally
+                        committed and want confirmation?</div>
+                    <div class="friction-options">
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq1', 'A', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">I'm actually
+                            undecided</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq1', 'B', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">I like it but
+                            haven't decided</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq1', 'C', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">I want to validate
+                            my choice</div>
+                    </div>
+                </div>
+
+                <div class="friction-question" id="fq2">
+                    <div class="friction-question-text">How long do you plan to stay in this property? Real estate is illiquid and expensive to exit.</div>
+                    <div class="friction-options">
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq2', 'A', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">More than 10 years</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq2', 'B', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">5 to 10 years</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq2', 'C', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Less than 5 years (Risky)</div>
+                    </div>
+                </div>
+
+                <div class="friction-question" id="fq3">
+                    <div class="friction-question-text">This is an under-construction property. Are you prepared for a 12-24 month delay?</div>
+                    <div class="friction-options">
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq3', 'A', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Yes, I have rent/stay backup</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq3', 'B', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">I can manage 6 months</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq3', 'C', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">No, I need it on time</div>
+                    </div>
+                </div>
+
+                <div class="friction-question" id="fq4">
+                    <div class="friction-question-text">If your income stopped for 6 months, how would you pay this EMI?</div>
+                    <div class="friction-options">
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq4', 'A', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Emergency fund exists</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq4', 'B', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Partial savings / Family</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq4', 'C', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">No backup plan</div>
+                    </div>
+                </div>
+
+                <div class="friction-question" id="fq5">
+                    <div class="friction-question-text">Have you checked this builder's track record for quality and delivery?</div>
+                    <div class="friction-options">
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq5', 'A', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Thoroughly checked</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq5', 'B', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Some research done</div>
+                        <div class="friction-option btn-ghost" onclick="selectFriction('fq5', 'C', this)"
+                            style="justify-content:flex-start; min-height:auto; padding:12px 16px;">Just going by brand</div>
+                    </div>
+                </div>
+            </div>
+            <div class="concern-meter" id="concern-meter">
+                <span class="cm-seg" id="cm-1"></span>
+                <span class="cm-seg" id="cm-2"></span>
+                <span class="cm-seg" id="cm-3"></span>
+                <span class="cm-seg" id="cm-4"></span>
+                <span class="cm-seg" id="cm-5"></span>
+            </div>
+            <div class="friction-summary" id="friction-summary"></div>
+            <div class="gate-actions">
+                <button class="btn-ghost" onclick="closeFrictionGate()" id="friction-cancel">Close</button>
+                <button class="btn-primary" onclick="proceedFromFriction()" id="friction-proceed" disabled style="width:100%">
+                    Next Question &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report View -->
+    <div id="report-view" class="container view report-shell" style="display:none; padding-top:40px;">
+        <div class="report-pager-top">
+            <div>
+                <div class="report-page-label">Audit Flow</div>
+                <div class="report-page-title" id="report-page-title">Page 1 of 5</div>
+                <div class="report-page-subtitle" id="report-page-subtitle">A guided view of affordability, resilience, and decision risk.</div>
+            </div>
+            <div class="report-page-dots">
+                <button type="button" class="report-page-dot" id="report-page-dot-0" onclick="setReportPage(0)">1</button>
+                <button type="button" class="report-page-dot" id="report-page-dot-1" onclick="setReportPage(1)">2</button>
+                <button type="button" class="report-page-dot" id="report-page-dot-2" onclick="setReportPage(2)">3</button>
+                <button type="button" class="report-page-dot" id="report-page-dot-3" onclick="setReportPage(3)">4</button>
+                <button type="button" class="report-page-dot" id="report-page-dot-4" onclick="setReportPage(4)">5</button>
+                <button type="button" class="report-page-dot" id="report-page-dot-5" onclick="setReportPage(5)">6</button>
+
+            </div>
+        </div>
+
+        <div class="report-page active" data-page-title="Verdict & Affordability">
+        <div id="r-verdict" class="report-section verdict-pulse">
+            <div class="confidence-bar"><div class="confidence-fill" id="conf-fill" style="width:0%"></div></div>
+        </div>
+        <div id="r-bias-detection"></div>
+        <div id="r-research-warnings" class="report-section" style="display:none;"></div>
+
+        <div id="share-bar" class="report-section" style="display:none">
+            <div class="share-bar-inner">
+                <div class="share-link-row">
+                    <input type="text" id="share-url-input" readonly class="field input share-url-field">
+                    <button class="btn-ghost" onclick="copyShareUrl()" id="copy-btn">Copy Link</button>
+                    <button class="btn-ghost" onclick="shareWhatsApp()" id="wa-btn">Share on WhatsApp</button>
+                </div>
+                <div class="wa-send-card" id="wa-send-card">
+                    <div class="wa-send-header">
+                        <span class="wa-send-icon">📲</span>
+                        <div>
+                            <div class="wa-send-title">Get your report on WhatsApp</div>
+                            <div class="wa-send-sub">We'll send your full verdict and key numbers directly to your phone.</div>
+                        </div>
+                    </div>
+                    <div class="wa-send-form">
+                        <div class="wa-phone-wrap">
+                            <span class="wa-phone-prefix">+91</span>
+                            <input type="tel" id="wa-phone-input" class="field input wa-phone-input" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric">
+                        </div>
+                        <button class="btn-primary wa-send-btn" id="wa-send-btn" onclick="sendReportToWhatsApp()">Send Report</button>
+                    </div>
+                    <div id="wa-send-status" class="wa-send-status" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <div class="section-label"><span>01 ·</span> CASH FLOW PREVIEW</div>
+            <div class="section-kicker">This is the fastest way to see whether the purchase still leaves enough breathing room every month.</div>
+            <div id="r-cashflow"></div>
+        </div>
+
+        <div class="report-section">
+            <div class="section-label"><span>02 ·</span> SCORECARD</div>
+            <div class="section-kicker">Read this like an executive summary: EMI pressure, runway strength, stress resilience, and value signal.</div>
+            <div id="r-scorecard"></div>
+        </div>
+        </div>
+
+        <!-- PAGE 2: Stress Tests & What-Ifs -->
+        <div class="report-page" data-page-title="Stress Tests &amp; What-Ifs">
+        <div class="report-section sensitivity-section" id="sensitivity-section">
+            <div class="section-label" style="display:flex;align-items:center;"><span>03 ·</span> WHAT-IF SLIDERS
+                <button type="button" class="btn-ghost" id="reset-whatif-btn" onclick="resetWhatIf()" style="font-size:11px;margin-left:auto;min-height:32px;padding:0 12px;border-radius:6px;">Back to Original</button>
+            </div>
+            <div class="section-kicker">Use these sliders to understand how much better or worse the decision becomes with a different price, tenure, or down payment.</div>
+            <div class="rcard whatif-shell">
+                <div class="slider-track">
+                    <div class="slider-topline">
+                        <span class="slider-label">Down Payment</span>
+                        <span id="wi-dp-val" class="slider-value-chip">—</span>
+                    </div>
+                    <input type="range" id="wi-dp" min="0" max="10000000" step="50000">
+                </div>
+                <div class="slider-track">
+                    <div class="slider-topline">
+                        <span class="slider-label">Property Price</span>
+                        <span id="wi-price-val" class="slider-value-chip">—</span>
+                    </div>
+                    <input type="range" id="wi-price" min="0" max="10000000" step="50000">
+                </div>
+                <div class="slider-track">
+                    <div class="slider-topline">
+                        <span class="slider-label">Loan Tenure</span>
+                        <span id="wi-tenure-val" class="slider-value-chip">—</span>
+                    </div>
+                    <input type="range" id="wi-tenure" min="5" max="30" step="1">
+                </div>
+                <div class="metric-grid whatif-metrics" style="grid-template-columns: repeat(4, 1fr); margin-top:24px;">
+                    <div class="metric-cell whatif-output-card" data-output-card="wm-emi">
+                        <div class="metric-label">Monthly EMI</div>
+                        <div class="metric-number" id="wm-emi" style="font-size:16px">—</div>
+                        <div class="field-hint" id="wm-emi-d"></div>
+                    </div>
+                    <div class="metric-cell whatif-output-card" data-output-card="wm-ratio">
+                        <div class="metric-label">EMI / Income</div>
+                        <div class="metric-number" id="wm-ratio" style="font-size:16px">—</div>
+                        <div class="field-hint" id="wm-ratio-d"></div>
+                    </div>
+                    <div class="metric-cell whatif-output-card" data-output-card="wm-surplus">
+                        <div class="metric-label">Surplus</div>
+                        <div class="metric-number" id="wm-surplus" style="font-size:16px">—</div>
+                        <div class="field-hint" id="wm-surplus-d"></div>
+                    </div>
+                    <div class="metric-cell whatif-output-card" data-output-card="wm-runway">
+                        <div class="metric-label">Runway</div>
+                        <div class="metric-number" id="wm-runway" style="font-size:16px">—</div>
+                        <div class="field-hint" id="wm-runway-d"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="rcard timeline-shell" id="r-timeline" style="margin-bottom:14px;display:none">
+            <div class="rcard-title">Buy Now vs Wait — The Timeline</div>
+            <div id="timeline-summary" class="timeline-summary-copy"></div>
+            <div class="timeline-axis" id="timeline-axis">
+                <div class="timeline-axis-line"></div>
+                <div class="timeline-scenarios">
+                    <div class="timeline-node-wrap" id="ts-now">
+                        <div class="timeline-node"></div>
+                        <div class="timeline-node-label">Buy Now</div>
+                        <div class="timeline-option-card" id="ts-now-metrics"></div>
+                    </div>
+                    <div class="timeline-node-wrap" id="ts-6mo">
+                        <div class="timeline-node"></div>
+                        <div class="timeline-node-label">Wait 6 Months</div>
+                        <div class="timeline-option-card" id="ts-6mo-metrics"></div>
+                    </div>
+                    <div class="timeline-node-wrap" id="ts-1yr">
+                        <div class="timeline-node"></div>
+                        <div class="timeline-node-label">Wait 1 Year</div>
+                        <div class="timeline-option-card" id="ts-1yr-metrics"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-footnote">5% property appreciation and 8% income growth assumptions.</div>
+        </div>
+
+        <div class="report-section">
+            <div class="section-label"><span>04 ·</span> STRESS TEST SCENARIOS</div>
+            <div class="section-kicker">These scenarios answer the real question: does the decision survive normal life shocks, not just best-case assumptions?</div>
+            <div id="r-stress" class="stress-grid-layout">
+                <!-- Populated by app.js -->
+            </div>
+        </div>
+
+        <div id="r-path-to-safe" class="report-section" style="display:none;"></div>
+
+        </div>
+
+        <!-- PAGE 3: Property Value & Rent vs Buy -->
+        <div class="report-page" data-page-title="Property Value &amp; Rent vs Buy">
+        <div class="report-section">
+            <div class="section-label"><span>05 ·</span> PROPERTY ASSESSMENT</div>
+            <div class="section-kicker">This section shows whether the asset itself looks sensible for the price and risk you are taking on.</div>
+            <div id="r-property" class="property-assessment-grid">
+                <!-- Populated by app.js -->
+            </div>
+        </div>
+
+
+        <div id="r-rvb-context" class="report-section"></div>
+
+        <div class="report-section">
+            <div class="section-label"><span>06 ·</span> RENT VS BUY</div>
+            <div class="section-kicker">If the ownership premium is too high, the property may be emotionally appealing but financially inefficient.</div>
+            <div class="rcard">
+                <div id="r-rvb"></div>
+            </div>
+        </div>
+        </div>
+
+        <!-- PAGE 4: Projections & True Cost -->
+        <div class="report-page" data-page-title="Projections &amp; True Cost">
+        <div class="rcard" id="r-mountain" style="margin-bottom:14px">
+            <div class="rcard-title">Net Worth Journey — The Full Picture</div>
+            <div class="section-kicker">This projection helps you see whether buying strengthens long-term wealth or just front-loads risk.</div>
+            <canvas id="mountain-canvas" height="200"
+                    style="width:100%;display:block;border-radius:6px"></canvas>
+            <div id="mountain-legend" style="display:flex;gap:20px;margin-top:12px;font-size:11px;font-family:var(--font-mono)"></div>
+            <div id="r-mountain-context" style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px;"></div>
+        </div>
+
+        <div class="report-section">
+            <div class="section-label"><span>07 ·</span> TRUE COST OF OWNERSHIP</div>
+            <div class="section-kicker">This is the money actually committed, including friction costs that are easy to underestimate during booking.</div>
+            <div class="premium-report-card">
+                <div id="r-tco"></div>
+            </div>
+        </div>
+
+
+
+        </div>
+
+        <div class="report-page" data-page-title="Reasoning & Blind Spots">
+        <div class="report-section">
+            <div class="section-label"><span>09 ·</span> ASSUMPTIONS CHALLENGED</div>
+            <div class="section-kicker">These are the weak links in the story that buyers usually ignore when they are already emotionally committed.</div>
+            <div id="r-challenges" class="premium-report-card"></div>
+        </div>
+
+
+        <div class="report-section">
+            <div class="section-label"><span>10 ·</span> WHY THIS VERDICT</div>
+            <div class="section-kicker">The highest-signal reasons driving the overall recommendation.</div>
+            <div id="r-reasons" class="premium-report-card"></div>
+        </div>
+
+
+        <div class="report-section">
+            <div class="section-label"><span>11 ·</span> ACTIONS</div>
+            <div class="section-kicker">If you still want this property, these are the smartest next moves to reduce risk.</div>
+            <div id="r-actions"></div>
+        </div>
+
+        <div class="report-section">
+            <div class="section-label"><span>12 ·</span> WHAT YOU MIGHT BE MISSING</div>
+            <div class="section-kicker">Gaps in your decision frame that could silently distort the final call.</div>
+            <div id="r-blind"></div>
+        </div>
+
+
+
+
+        </div>
+
+        <!-- PAGE 6: Action & Export -->
+        <div class="report-page" data-page-title="Action &amp; Export">
+
+
+        <div class="report-section">
+            <div class="section-label"><span>13 ·</span> FULL REASONING</div>
+            <div class="section-kicker">A narrative audit of affordability, resilience, property quality, and downside risk.</div>
+            <div class="premium-report-card">
+                <div class="reasoning-layout">
+                    <div id="r-reasoning-insight" class="reasoning-insight-card"></div>
+                    <div id="r-reasoning" class="reasoning"></div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="report-section">
+            <div class="section-label"><span>14 ·</span> DOCUMENT VERIFICATION SUITE</div>
+
+
+            <div class="section-kicker">Upload documents here to pressure-test title, bank terms, and negotiation readiness before you commit.</div>
+            <div class="rcard" id="r-documents">
+                <div class="document-grid">
+                    <div class="doc-upload-zone" onclick="document.getElementById('ec-file').click()" data-upload-kind="ec">
+                        <input type="file" id="ec-file" accept=".pdf" style="display:none" onchange="uploadEC(this)">
+                        <div class="doc-upload-icon" aria-hidden="true">EC</div>
+                        <div class="doc-upload-title">Click to upload or drag and drop</div>
+                        <div class="doc-upload-subtitle">Encumbrance Certificate PDF</div>
+                        <div class="doc-upload-meta">PDF up to 10MB · Checks mortgages and title chain</div>
+            </div>
+                    <div class="doc-upload-zone" onclick="document.getElementById('loan-file').click()" data-upload-kind="loan">
+                        <input type="file" id="loan-file" accept=".pdf,image/*" style="display:none" onchange="uploadLoanLetter(this)">
+                        <div class="doc-upload-icon" aria-hidden="true">LN</div>
+                        <div class="doc-upload-title">Click to upload or drag and drop</div>
+                        <div class="doc-upload-subtitle">Loan letter or sanction document</div>
+                        <div class="doc-upload-meta">PDF, PNG, JPG up to 10MB · Extracts rate and hidden charges</div>
+                    </div>
+                </div>
+                <div class="document-result-grid">
+                    <div id="ec-result"></div>
+                    <div id="loan-result"></div>
+                </div>
+                <div class="document-actions">
+                    <button class="btn-ghost" onclick="downloadCounterOffer()" id="counter-offer-btn">Counter-Offer Letter</button>
+                    <button class="btn-ghost" onclick="openBankEmailModal()">Loan Inquiry Email</button>
+            </div>
+        </div>
+        </div>
+
+        <div class="report-section comparison-section" id="compare-section">
+            <div class="section-label"><span>15 ·</span> COMPARISON</div>
+
+            <div class="section-kicker">Compare this option against a second property using the same audit lens before you decide.</div>
+            <div id="compare-bar" style="margin-bottom:16px">
+                <button class="btn-ghost" onclick="startComparison()">+ Compare Property</button>
+            </div>
+            <div id="compare-form" class="rcard" style="display:none;">
+                <div class="field-grid">
+                    <div class="field">
+                        <label class="field-label" for="c_price">PROPERTY PRICE</label>
+                        <input type="number" id="c_price">
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="c_loc">LOCATION</label>
+                        <input type="text" id="c_loc">
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="c_sqft">CARPET AREA</label>
+                        <input type="number" id="c_sqft">
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="c_dp">DOWN PAYMENT</label>
+                        <input type="number" id="c_dp">
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="c_rdy">READY TO MOVE</label>
+                        <select id="c_rdy">
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="c_bld">BUILDER</label>
+                        <input type="text" id="c_bld">
+                    </div>
+                </div>
+                <div style="display:flex; gap:16px;">
+                    <button class="btn-primary" onclick="runComparison()">Analyze 2nd Property</button>
+                </div>
+            </div>
+            <div id="compare-results"></div>
+        </div>
+
+
+
+        <div class="report-section" style="margin-bottom: 64px;">
+            <div class="section-label"><span>16 ·</span> EXPORT & SHARE</div>
+            <div class="section-kicker">Download your full report or share a summary card on LinkedIn.</div>
+            <div class="export-actions-minimal">
+                <button class="btn-primary" onclick="downloadPDF()">Download PDF Report</button>
+                <button class="btn-ghost" onclick="downloadLinkedInCard()">LinkedIn Card Download</button>
+            </div>
+        </div>
+
+        </div>
+
+        <div class="report-minimal-footer">
+            <div class="report-footer-sources">
+                <strong>Note:</strong> Analysis in 37.77s · Mumbai micro-market benchmarks (NIV AI Q4 2025 database) · RBI Master Circular — Housing Finance (2024) · Maharashtra Stamp Duty & Registration Act · Income Tax Act Sections 80C and 24(b) · RERA Maharashtra Public Portal
+            </div>
+
+            <div class="report-pager-minimal">
+                <div class="report-nav-actions">
+                    <button type="button" class="btn-ghost" onclick="prevReportPage()" id="report-prev-btn">Back</button>
+                    <div class="report-page-label" id="report-page-progress">Page 1 of 6</div>
+                    <button type="button" class="btn-primary" onclick="nextReportPage()" id="report-next-btn">Next</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="bank-email-modal" class="gate-overlay" style="display:none;">
+        <div class="bank-modal-shell rcard">
+            <div class="bank-modal-header">
+                <div>
+                    <div class="section-label">LOAN INQUIRY</div>
+                    <div class="bank-modal-title">Generate a polished bank-ready draft</div>
+                    <div class="bank-modal-subtitle">Use this to move from analysis into action without losing your place in the report.</div>
+                </div>
+                <button class="btn-ghost" onclick="closeBankEmail()">Back to Report</button>
+            </div>
+            <div class="bank-modal-body">
+                <div class="bank-modal-toolbar">
+                    <div class="bank-modal-bank">
+                        <label class="field-label" for="target-bank">SELECT BANK</label>
+                        <select id="target-bank" class="field input">
+                            <option value="HDFC">HDFC Bank</option>
+                            <option value="SBI">SBI Bank</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="generateBankEmail()" id="bank-email-generate-btn">Generate Draft</button>
+                </div>
+                <div id="bank-email-loading" class="bank-modal-status" style="display:none;">Generating draft...</div>
+                <div id="bank-email-error" class="bank-modal-status bank-modal-status-error" style="display:none;"></div>
+                <div id="bank-email-content" style="display:none;">
+                    <div id="bank-email-insight" class="bank-email-insight" style="display:none;"></div>
+                    <div class="bank-email-preview-shell">
+                        <div class="bank-email-preview-header">
+                            <div class="bank-email-preview-title">Draft Preview</div>
+                            <div class="bank-email-preview-note" id="bank-email-preview-note">Structured for clarity and ready to customize before sending.</div>
+                        </div>
+                        <div id="bank-email-preview" class="bank-email-preview"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="bank-email-actions" class="bank-modal-footer" style="display:flex;">
+                <button class="btn-ghost" id="bank-email-copy-btn" onclick="copyBankEmail()">Copy Draft</button>
+                <button class="btn-ghost" id="bank-email-mailto-btn" onclick="openMailto()">Open Email App</button>
+                <button class="btn-primary" onclick="closeBankEmail()">Back to Report</button>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:none">
+        <span id="print-date"></span>
+        <span id="print-meta"></span>
+    </div>
+
+
+
+    <div id="cashflow-tooltip" class="cashflow-tooltip" style="display:none;"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

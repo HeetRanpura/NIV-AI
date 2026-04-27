@@ -1,0 +1,41 @@
+.gcloudignore
+.git
+.gitignore
+.github/
+.env
+.env.*
+!.env.example
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+
+# Node (not used, but safety net)
+node_modules/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Firebase local state
+.firebase/
+.firebaserc
+firebase.json
+firestore.rules
+
+# Docs / dev files
+README.md
+context.md
+skills-lock.json
+tests/

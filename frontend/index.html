@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIV AI — Home Buying Decision Engine</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- ─── NAV ─── -->
+  <nav class="landing-nav">
+    <div class="nav-inner container">
+      <a href="/" class="nav-logo"><span class="nav-logo-niv">NIV</span> AI</a>
+      <div class="nav-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#what-you-get">What you get</a>
+        <a href="#compare">Why choose NIV AI</a>
+        <a href="#about">About Us</a>
+      </div>
+      <a href="app.html" class="btn-primary nav-cta">Analyze My Property →</a>
+      <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div id="nav-mobile-menu">
+      <div class="nav-mobile-inner container">
+        <a href="#how-it-works" class="nav-mobile-link">How it works</a>
+        <a href="#features" class="nav-mobile-link">Features</a>
+        <a href="#what-you-get" class="nav-mobile-link">What you get</a>
+        <a href="#compare" class="nav-mobile-link">Why choose NIV AI</a>
+        <a href="app.html" class="btn-primary">Analyze My Property →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── HERO ─── -->
+  <section class="hero-section">
+    <div class="container hero-grid">
+
+      <div class="hero-content">
+        <p class="hero-label">MUMBAI'S FIRST AI DECISION ENGINE · BUILT FOR SMART BUYERS</p>
+        <h1 class="hero-h1">
+          <span class="hero-h1-line1">The AI that tries to talk you</span>
+          <span class="hero-h1-line2">out of a bad Mumbai property.</span>
+        </h1>
+        <p class="landing-sub">
+          NIV AI is Mumbai's first agent-agnostic engine built to find reasons NOT to buy. We stress-test your finances
+          against local micro-market data and interest rate shocks — so your home purchase is 100% safe.
+        </p>
+        <div class="hero-ctas">
+          <a href="app.html" class="btn-primary hero-btn">Analyze My Mumbai Property →</a>
+          <a href="#how-it-works" class="btn-ghost">See how it works ↓</a>
+        </div>
+        <div class="hero-stats">
+          <span class="live-dot"></span>
+          6 specialized AI agents · Mumbai micro-market data · RERA verification suite · Bias-free audits
+        </div>
+      </div>
+      <div class="hero-img-wrap">
+        <span class="orb orb-1"></span>
+        <span class="orb orb-2"></span>
+        <img src="static.jpg" alt="NIV AI Dashboard" class="hero-img float-anim">
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── FEATURES ─── -->
+  <section id="how-it-works" class="features-section">
+    <div class="container">
+      <p class="features-label">HOW IT WORKS</p>
+      <div class="features-grid">
+
+        <div class="features-cards">
+          <div class="feature-card" data-animate="slide-up">
+            <p class="feature-number">01 · DETERMINISTIC MATH</p>
+            <h3 class="feature-title">Deterministic Math</h3>
+            <p class="feature-desc">The LLM never performs arithmetic. Every rupee figure is computed by a strict Python
+              financial engine — agents just intelligently interpret the results.</p>
+          </div>
+          <div class="feature-card" data-animate="slide-up">
+            <p class="feature-number">02 · STRESS TESTED</p>
+            <h3 class="feature-title">Stress Tested</h3>
+            <p class="feature-desc">4 scenarios: job loss, rate hike, unexpected expense, and income stagnation. Your
+              verdict is based on survival of crises, not best-case projections.</p>
+          </div>
+          <div class="feature-card" data-animate="slide-up">
+            <p class="feature-number">03 · BEHAVIORAL CHALLENGE</p>
+            <h3 class="feature-title">Behavioral Challenge</h3>
+            <p class="feature-desc">Agent 5 plays devil's advocate, challenging assumptions about your future income to
+              combat cognitive biases and blind spots.</p>
+          </div>
+        </div>
+
+        <div class="feature-tablet-wrap">
+          <img src="tablet_img.png" alt="NIV AI Tablet View" class="feature-tablet">
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── AGENT GRID ─── -->
+  <section id="agents" class="agents-section">
+    <div class="container">
+      <p class="agents-label">THE 6-AGENT PIPELINE</p>
+      <div class="agents-grid">
+        <div class="agent-card" data-animate="fade-in">
+          <p class="agent-badge">01</p>
+          <h4 class="agent-name">Context Synthesizer</h4>
+          <p class="agent-desc">Injects RBI warnings, benchmark ratios, and real estate market rules into your scenario
+            analysis.</p>
+        </div>
+        <div class="agent-card" data-animate="fade-in">
+          <p class="agent-badge">02</p>
+          <h4 class="agent-name">Financial Analyst</h4>
+          <p class="agent-desc">Evaluates debt-to-income, runway, and living expense strain using raw Python math
+            engines.</p>
+        </div>
+        <div class="agent-card" data-animate="fade-in">
+          <p class="agent-badge">03</p>
+          <h4 class="agent-name">Risk Simulator</h4>
+          <p class="agent-desc">Subjects your cash flow to 4 local scenarios: job loss, sudden major expense, stagnant
+            income, and rate hikes.</p>
+        </div>
+        <div class="agent-card" data-animate="fade-in">
+          <p class="agent-badge">04</p>
+          <h4 class="agent-name">Property Analyst</h4>
+          <p class="agent-desc">Validates pricing against local Mumbai micro-market medians and highlights RERA status
+            red flags.</p>
+        </div>
+        <div class="agent-card" data-animate="fade-in">
+          <p class="agent-badge">05</p>
+          <h4 class="agent-name">Assumption Challenger</h4>
+          <p class="agent-desc">Identifies cognitive biases and emotional momentum forcing you into a bad financial
+            decision.</p>
+        </div>
+        <div class="agent-card" data-animate="fade-in">
+          <p class="agent-badge">06</p>
+          <h4 class="agent-name">Decision Composer</h4>
+          <p class="agent-desc">Collates all signals to issue a ruthless SAFE, RISKY, or RECONSIDER verdict with
+            actionable next steps.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── BIAS VS SECTION ─── -->
+  <section class="bias-section">
+    <div class="container">
+      <p class="section-label">THE UNBIASED AI DIFFERENCE</p>
+      <div class="bias-grid">
+        <div class="bias-card bias-bad">
+          <div class="bias-card-label">Every other tool</div>
+          <div class="bias-card-title">Shows you why you CAN afford it</div>
+          <p class="bias-card-desc">EMI calculators, broker tools, and bank apps
+            are designed to close the deal. They show best-case scenarios.</p>
+        </div>
+        <div class="bias-divider">VS</div>
+        <div class="bias-card bias-good">
+          <div class="bias-card-label">NIV AI</div>
+          <div class="bias-card-title">Actively tries to talk you out of it</div>
+          <p class="bias-card-desc">Agent 5 plays devil's advocate. The AI audits
+            its own reasoning for bias. Your decision only gets SAFE if it
+            withstands everything we throw at it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── SERVICES ─── -->
+  <section class="services-section">
+    <div class="container">
+      <p class="services-label">POST-ANALYSIS SERVICES INCLUDED</p>
+      <div class="services-grid">
+
+        <div class="service-item">
+          <div class="service-check-wrap">
+            <svg class="draw-check" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <p class="service-name">Counter-Offer Letter</p>
+            <p class="service-desc">Mathematical justification to negotiate a lower builder price by citing area
+              medians.</p>
+          </div>
+        </div>
+
+        <div class="service-item">
+          <div class="service-check-wrap">
+            <svg class="draw-check" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <p class="service-name">Bank Inquiry Email</p>
+            <p class="service-desc">Generates a formal PDF to query loan rates based on your specific risk profile.</p>
+          </div>
+        </div>
+
+        <div class="service-item">
+          <div class="service-check-wrap">
+            <svg class="draw-check" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <p class="service-name">LinkedIn Card Export</p>
+            <p class="service-desc">Share your property analysis summary as a professional LinkedIn-ready card.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── COMPLETE FEATURES DECK ─── -->
+  <section class="deck-section" id="features">
+    <div class="container">
+      <p class="deck-label">EVERYTHING INCLUDED</p>
+      <h2 class="deck-title">The Complete Capability Deck</h2>
+      <div class="poke-grid">
+
+        <!-- Card 1 -->
+        <div class="poke-card" onclick="openPokeModal(this)">
+          <div class="poke-card-header">
+            <span class="poke-num">01</span>
+            <h3 class="poke-title">Core Features</h3>
+            <svg class="poke-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="poke-card-body">
+            <ul class="poke-list">
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Instant Buy Verdict</div>
+                  <div class="poke-li-desc">Get a clear answer: safe to proceed or not.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Cashflow Breakdown</div>
+                  <div class="poke-li-desc">See exactly how your money flows each month.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">EMI vs Income Analysis</div>
+                  <div class="poke-li-desc">Check if your loan fits your income comfortably.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Real-Time Scenario Recalculation</div>
+                  <div class="poke-li-desc">Every change instantly updates your results.</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="poke-card" onclick="openPokeModal(this)">
+          <div class="poke-card-header">
+            <span class="poke-num">02</span>
+            <h3 class="poke-title">Property Intelligence</h3>
+            <svg class="poke-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="poke-card-body">
+            <ul class="poke-list">
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Price Benchmarking</div>
+                  <div class="poke-li-desc">Compare the property against local market rates.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Deal Quality Insight</div>
+                  <div class="poke-li-desc">Understand if you’re getting a fair deal.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Overpricing Detection</div>
+                  <div class="poke-li-desc">Spot if you’re paying more than it’s worth.</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="poke-card" onclick="openPokeModal(this)">
+          <div class="poke-card-header">
+            <span class="poke-num">03</span>
+            <h3 class="poke-title">Long-Term View</h3>
+            <svg class="poke-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="poke-card-body">
+            <ul class="poke-list">
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">10-Year Projection</div>
+                  <div class="poke-li-desc">See how this decision impacts your future finances.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">True Cost of Ownership</div>
+                  <div class="poke-li-desc">Reveal the real cost beyond just EMI.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Total Interest Paid</div>
+                  <div class="poke-li-desc">Know how much extra you’ll pay over time.</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="poke-card" onclick="openPokeModal(this)">
+          <div class="poke-card-header">
+            <span class="poke-num">04</span>
+            <h3 class="poke-title">Risk & Clarity</h3>
+            <svg class="poke-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="poke-card-body">
+            <ul class="poke-list">
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Stress Testing</div>
+                  <div class="poke-li-desc">Test your finances against real-life risks.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Risk Signals</div>
+                  <div class="poke-li-desc">Identify what could go wrong before it happens.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Financial Pressure Indicators</div>
+                  <div class="poke-li-desc">See how tight your finances really are.</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="poke-card" onclick="openPokeModal(this)">
+          <div class="poke-card-header">
+            <span class="poke-num">05</span>
+            <h3 class="poke-title">Smart Guidance</h3>
+            <svg class="poke-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="poke-card-body">
+            <ul class="poke-list">
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Decision Summary</div>
+                  <div class="poke-li-desc">Get a clear buy, wait, or reconsider outcome.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Actionable Steps</div>
+                  <div class="poke-li-desc">Know exactly what to improve or change.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Next-Step Suggestions</div>
+                  <div class="poke-li-desc">Follow simple steps to strengthen your decision.</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="poke-card" onclick="openPokeModal(this)">
+          <div class="poke-card-header">
+            <span class="poke-num">06</span>
+            <h3 class="poke-title">Output & Utility</h3>
+            <svg class="poke-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="poke-card-body">
+            <ul class="poke-list">
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Downloadable Report</div>
+                  <div class="poke-li-desc">Export your full analysis in one clean report.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Visual Summaries</div>
+                  <div class="poke-li-desc">Understand insights through simple visuals.</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Card 7 -->
+        <div class="poke-card" onclick="openPokeModal(this)">
+          <div class="poke-card-header">
+            <span class="poke-num">07</span>
+            <h3 class="poke-title">Experience</h3>
+            <svg class="poke-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="poke-card-body">
+            <ul class="poke-list">
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">No Prompting Required</div>
+                  <div class="poke-li-desc">No need to ask—everything is automated.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Guided Flow</div>
+                  <div class="poke-li-desc">Move step-by-step through your decision.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Real-Time Updates</div>
+                  <div class="poke-li-desc">See changes instantly as inputs adjust.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Simple Explanations</div>
+                  <div class="poke-li-desc">Everything explained in plain language.</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Card 8 -->
+        <div class="poke-card" onclick="openPokeModal(this)">
+          <div class="poke-card-header">
+            <span class="poke-num">08</span>
+            <h3 class="poke-title">Affordability Insights</h3>
+            <svg class="poke-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="poke-card-body">
+            <ul class="poke-list">
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Affordability Boundary</div>
+                  <div class="poke-li-desc">Know the maximum property price you can safely afford.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">EMI Threshold Indicator</div>
+                  <div class="poke-li-desc">See the limit beyond which your finances get strained.</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Card 9 -->
+        <div class="poke-card" onclick="openPokeModal(this)">
+          <div class="poke-card-header">
+            <span class="poke-num">09</span>
+            <h3 class="poke-title">Sensitivity Analysis</h3>
+            <svg class="poke-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="poke-card-body">
+            <ul class="poke-list">
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Expense Sensitivity</div>
+                  <div class="poke-li-desc">Understand how expense changes affect your stability.</div>
+                </div>
+              </li>
+              <li class="poke-li">
+                <div class="poke-li-dot"></div>
+                <div class="poke-li-text">
+                  <div class="poke-li-title">Income Sensitivity</div>
+                  <div class="poke-li-desc">See how income changes impact your affordability.</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- ─── WHY CHOOSE NIV AI ─── -->
+  <section class="compare-section" id="compare">
+    <div class="container">
+      <p class="compare-label">WHY CHOOSE NIV AI</p>
+      <h2 class="compare-title">NIV AI vs Others</h2>
+      <p class="compare-sub">NIV AI brings the entire decision journey into one structured experience, while other tools
+        focus on individual parts of the problem.</p>
+
+      <div class="compare-table-wrap" data-animate="slide-up">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th class="col-niv">NIV AI</th>
+              <th>Zillow Zestimate</th>
+              <th>RealEstateCalculator.ai</th>
+              <th>YNAB</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Clear Buy / Don’t Buy Direction</td>
+              <td class="col-niv"><span class="icon-yes">✓</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-no">✕</span></td>
+            </tr>
+            <tr>
+              <td>Cashflow Awareness (Income vs EMI)</td>
+              <td class="col-niv"><span class="icon-yes">✓</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-partial">◑</span><span class="td-sub">Input-driven</span></td>
+              <td><span class="icon-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Stress Testing (Job Loss, Rate Changes)</td>
+              <td class="col-niv"><span class="icon-yes">✓</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-no">✕</span></td>
+            </tr>
+            <tr>
+              <td>Property Value Insight</td>
+              <td class="col-niv"><span class="icon-partial">◑</span><span class="td-sub">Developing (improving data
+                  depth)</span></td>
+              <td><span class="icon-yes">✓</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-no">✕</span></td>
+            </tr>
+            <tr>
+              <td>Rent vs Buy Comparison</td>
+              <td class="col-niv"><span class="icon-yes">✓</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-partial">◑</span><span class="td-sub">Manual analysis</span></td>
+              <td><span class="icon-no">✕</span></td>
+            </tr>
+            <tr>
+              <td>Long-Term Financial Impact</td>
+              <td class="col-niv"><span class="icon-partial">◑</span><span class="td-sub">Developing (deeper
+                  projections)</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-yes">✓</span></td>
+              <td><span class="icon-partial">◑</span><span class="td-sub">Indirect</span></td>
+            </tr>
+            <tr>
+              <td>Guided Step-by-Step Experience</td>
+              <td class="col-niv"><span class="icon-yes">✓</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-partial">◑</span><span class="td-sub">Budget-focused</span></td>
+            </tr>
+            <tr>
+              <td>Actionable Next Steps</td>
+              <td class="col-niv"><span class="icon-yes">✓</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-partial">◑</span><span class="td-sub">General advice</span></td>
+            </tr>
+            <tr>
+              <td>All-in-One Experience</td>
+              <td class="col-niv"><span class="icon-yes">✓</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-no">✕</span></td>
+              <td><span class="icon-no">✕</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TIMELINE ─── -->
+  <section id="what-you-get" class="timeline-section">
+    <div class="container">
+      <p class="timeline-label">WHAT YOU GET</p>
+      <h2 class="timeline-h2">Four steps from financial<br>input to real estate <em>clarity.</em></h2>
+      <div class="timeline-line-wrap">
+        <div id="timeline-line"></div>
+      </div>
+      <div class="tl-steps">
+        <div class="tl-step">
+          <span class="tl-num">01</span>
+          <p class="tl-name">Fill in your finances</p>
+          <p class="tl-detail">Provide income, existing EMIs, and monthly savings capacity. Takes 2 min.</p>
+        </div>
+        <div class="tl-step">
+          <span class="tl-num">02</span>
+          <p class="tl-name">Add the property details</p>
+          <p class="tl-detail">Price, RERA registration, possession timeline, and down payment setup.</p>
+        </div>
+        <div class="tl-step">
+          <span class="tl-num">03</span>
+          <p class="tl-name">Answer 5 reality checks</p>
+          <p class="tl-detail">Quick questions that surface cognitive biases and blind spots in your reasoning.</p>
+        </div>
+        <div class="tl-step">
+          <span class="tl-num">04</span>
+          <p class="tl-name">Get your verdict + full report</p>
+          <p class="tl-detail">SAFE, RISKY, or RECONSIDER — with a complete PDF in ~10s.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CTA ─── -->
+  <section class="cta-section">
+    <div class="container">
+      <h2 class="cta-h2">Run your analysis —<br>it takes 3 minutes.</h2>
+      <a href="app.html" class="btn-primary cta-btn">Analyze My Property →</a>
+      <p class="cta-sub">No signup. No account. Free.</p>
+    </div>
+  </section>
+
+  <!-- ─── ABOUT US ─── -->
+  <section class="about-section" id="about">
+    <div class="container">
+      <div class="about-header" data-animate="fade-in">
+        <p class="section-label"><span>◆</span> THE TEAM</p>
+        <h2 class="about-h2">Built on <span class="about-h2-accent">6 losses.</span><br>Shipped for real people.</h2>
+        <p class="about-hero-sub">We entered six hackathons and lost every single one. NIV AI is what happens when you stop caring about trophies and start caring about the problem.</p>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-left" data-animate="slide-up">
+          <div class="about-story-card">
+            <div class="about-story-icon">⚡</div>
+            <h3 class="about-story-title">Every loss sharpened us</h3>
+            <p class="about-story-text">Every rejection made the product better. This is our seventh attempt — and this time we built it for real people, not judges.</p>
+          </div>
+          <div class="about-story-card" style="transition-delay:0.1s">
+            <div class="about-story-icon">🏗️</div>
+            <h3 class="about-story-title">We are builders first</h3>
+            <p class="about-story-text">No VC backing, no prestige. Just a team obsessed with solving one of the most stressful decisions a family ever makes.</p>
+          </div>
+          <div class="about-story-card" style="transition-delay:0.2s">
+            <div class="about-story-icon">🎯</div>
+            <h3 class="about-story-title">Mumbai is our mission</h3>
+            <p class="about-story-text">We grew up watching families get burned by bad real-estate decisions. NIV AI exists so that never happens again.</p>
+          </div>
+        </div>
+
+        <div class="about-right" data-animate="slide-up" style="transition-delay:0.15s">
+          <div class="about-losses-card">
+            <div class="about-losses-header">
+              <p class="about-losses-label">OUR DEFEAT RECORD</p>
+              <div class="about-losses-score">
+                <span class="about-score-num">6</span><span class="about-score-sep">/</span><span class="about-score-denom">6</span>
+                <span class="about-score-tag">losses</span>
+              </div>
+            </div>
+            <div class="about-losses">
+              <div class="about-loss-row">
+                <span class="about-loss-num">01</span>
+                <div class="about-loss-info">
+                  <div class="about-loss-name">Smart India Hackathon 2025</div>
+                  <div class="about-loss-note">National level · Lost in finals</div>
+                </div>
+                <span class="about-loss-badge">L</span>
+              </div>
+              <div class="about-loss-row">
+                <span class="about-loss-num">02</span>
+                <div class="about-loss-info">
+                  <div class="about-loss-name">MetaxScalar Hackathon</div>
+                  <div class="about-loss-note">Blockchain & AI track</div>
+                </div>
+                <span class="about-loss-badge">L</span>
+              </div>
+              <div class="about-loss-row">
+                <span class="about-loss-num">03</span>
+                <div class="about-loss-info">
+                  <div class="about-loss-name">IEEE Hackxplore</div>
+                  <div class="about-loss-note">IEEE chapter competition</div>
+                </div>
+                <span class="about-loss-badge">L</span>
+              </div>
+              <div class="about-loss-row">
+                <span class="about-loss-num">04</span>
+                <div class="about-loss-info">
+                  <div class="about-loss-name">CodeForge</div>
+                  <div class="about-loss-note">Full-stack engineering sprint</div>
+                </div>
+                <span class="about-loss-badge">L</span>
+              </div>
+              <div class="about-loss-row">
+                <span class="about-loss-num">05</span>
+                <div class="about-loss-info">
+                  <div class="about-loss-name">InnvoteX</div>
+                  <div class="about-loss-note">Innovation & product design</div>
+                </div>
+                <span class="about-loss-badge">L</span>
+              </div>
+              <div class="about-loss-row">
+                <span class="about-loss-num">06</span>
+                <div class="about-loss-info">
+                  <div class="about-loss-name">Locus <span class="about-loss-yc">(YC W25)</span></div>
+                  <div class="about-loss-note">Y Combinator backed hackathon</div>
+                </div>
+                <span class="about-loss-badge">L</span>
+              </div>
+            </div>
+            <div class="about-wins-note">
+              <span class="about-wins-zero">0 wins.</span>
+              <span class="about-wins-lessons">6 lessons.</span>
+              <span class="about-wins-product">1 product that actually works.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ─── -->
+  <footer class="landing-footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <span class="footer-logo-dot"></span>
+        NIV AI
+      </div>
+      <p class="footer-sub">Mumbai Home Buying Intelligence</p>
+      <p class="footer-legal">Not financial advice. For informational purposes only.</p>
+    </div>
+  </footer>
+
+  <!-- ─── POKE MODAL OVERLAY ─── -->
+  <div class="poke-modal-overlay" id="poke-modal-overlay" onclick="closePokeModal()">
+    <div class="poke-modal-content" id="poke-modal-content" onclick="event.stopPropagation()">
+      <button class="poke-modal-close" onclick="closePokeModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div id="poke-modal-inner"></div>
+    </div>
+  </div>
+
+  <button id="scrollTopBtn" title="Go to top">↑ Top</button>
+
+  <script>
+    // Scroll to Top logic
+    const scrollTopBtn = document.getElementById("scrollTopBtn");
+    window.addEventListener('scroll', () => {
+      if (document.body.scrollTop > 400 || document.documentElement.scrollTop > 400) {
+        scrollTopBtn.style.display = "block";
+      } else {
+        scrollTopBtn.style.display = "none";
+      }
+    });
+    scrollTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Animate [data-animate] elements on scroll
+    const animObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          animObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('[data-animate]').forEach(el => animObserver.observe(el));
+
+    // Animate timeline line width 0 → 100%
+    const timelineLine = document.getElementById('timeline-line');
+    if (timelineLine) {
+      const lineObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            timelineLine.style.width = '100%';
+            lineObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.3 });
+      lineObserver.observe(timelineLine.parentElement);
+    }
+
+    // Draw SVG checkmarks via stroke-dashoffset
+    const checkObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          checkObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.draw-check').forEach(el => checkObserver.observe(el));
+
+    // About section — story cards & loss rows slide in on scroll
+    const aboutObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          aboutObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.about-story-card, .about-loss-row').forEach(el => aboutObserver.observe(el));
+
+    // Mobile nav toggle with height animation
+    const navToggle = document.getElementById('nav-toggle');
+    const navMobileMenu = document.getElementById('nav-mobile-menu');
+    if (navToggle && navMobileMenu) {
+      navToggle.addEventListener('click', () => {
+        navMobileMenu.classList.toggle('open');
+      });
+      // Close menu when a link is tapped
+      navMobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => navMobileMenu.classList.remove('open'));
+      });
+    }
+
+    // Poke Modal Logic
+    function openPokeModal(card) {
+      const overlay = document.getElementById('poke-modal-overlay');
+      const inner = document.getElementById('poke-modal-inner');
+
+      const header = card.querySelector('.poke-card-header').cloneNode(true);
+      const list = card.querySelector('.poke-list').cloneNode(true);
+
+      const icon = header.querySelector('.poke-icon');
+      if (icon) icon.remove();
+
+      inner.innerHTML = '';
+      inner.appendChild(header);
+
+      const bodyWrap = document.createElement('div');
+      bodyWrap.className = 'poke-modal-body';
+      bodyWrap.appendChild(list);
+      inner.appendChild(bodyWrap);
+
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closePokeModal() {
+      const overlay = document.getElementById('poke-modal-overlay');
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,682 @@
+{
+  "andheri_west": {
+    "name": "Andheri West",
+    "avg_price_per_sqft": {
+      "min": 18000,
+      "median": 22000,
+      "max": 28000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 4.0,
+      "max": 8.0,
+      "typical": 5.5
+    },
+    "rental_yield_pct": 2.5,
+    "distance_to_bkc_km": 8,
+    "distance_to_lower_parel_km": 15,
+    "metro_connectivity": true,
+    "infrastructure_notes": "Metro Line 1 operational. Western line.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "andheri_east": {
+    "name": "Andheri East",
+    "avg_price_per_sqft": {
+      "min": 14000,
+      "median": 18000,
+      "max": 24000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.5,
+      "max": 7.0,
+      "typical": 5.0
+    },
+    "rental_yield_pct": 2.8,
+    "distance_to_bkc_km": 6,
+    "distance_to_lower_parel_km": 14,
+    "metro_connectivity": true,
+    "infrastructure_notes": "MIDC belt transitioning. Metro access.",
+    "flood_risk": "high",
+    "data_as_of": "2025-Q4"
+  },
+  "bandra_west": {
+    "name": "Bandra West",
+    "avg_price_per_sqft": {
+      "min": 35000,
+      "median": 55000,
+      "max": 80000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 6.0,
+      "max": 12.0,
+      "typical": 8.0
+    },
+    "rental_yield_pct": 2.0,
+    "distance_to_bkc_km": 3,
+    "distance_to_lower_parel_km": 8,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Premium locality. Sea link access.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "bandra_east": {
+    "name": "Bandra East",
+    "avg_price_per_sqft": {
+      "min": 22000,
+      "median": 32000,
+      "max": 45000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 5.0,
+      "max": 10.0,
+      "typical": 7.0
+    },
+    "rental_yield_pct": 2.3,
+    "distance_to_bkc_km": 2,
+    "distance_to_lower_parel_km": 7,
+    "metro_connectivity": true,
+    "infrastructure_notes": "BKC adjacent. Metro Line 3 coming.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "borivali_west": {
+    "name": "Borivali West",
+    "avg_price_per_sqft": {
+      "min": 14000,
+      "median": 18000,
+      "max": 24000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.0,
+      "max": 6.0,
+      "typical": 4.5
+    },
+    "rental_yield_pct": 2.8,
+    "distance_to_bkc_km": 22,
+    "distance_to_lower_parel_km": 28,
+    "metro_connectivity": true,
+    "infrastructure_notes": "National Park adjacent. Good schools.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "borivali_east": {
+    "name": "Borivali East",
+    "avg_price_per_sqft": {
+      "min": 12000,
+      "median": 16000,
+      "max": 21000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.0,
+      "max": 5.5,
+      "typical": 4.0
+    },
+    "rental_yield_pct": 3.0,
+    "distance_to_bkc_km": 24,
+    "distance_to_lower_parel_km": 30,
+    "metro_connectivity": false,
+    "infrastructure_notes": "More affordable. Developing infra.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "goregaon_west": {
+    "name": "Goregaon West",
+    "avg_price_per_sqft": {
+      "min": 15000,
+      "median": 20000,
+      "max": 26000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 4.0,
+      "max": 7.0,
+      "typical": 5.0
+    },
+    "rental_yield_pct": 2.6,
+    "distance_to_bkc_km": 14,
+    "distance_to_lower_parel_km": 20,
+    "metro_connectivity": true,
+    "infrastructure_notes": "Film City proximity. Growing hub.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "goregaon_east": {
+    "name": "Goregaon East",
+    "avg_price_per_sqft": {
+      "min": 13000,
+      "median": 17000,
+      "max": 23000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.5,
+      "max": 6.5,
+      "typical": 4.5
+    },
+    "rental_yield_pct": 2.7,
+    "distance_to_bkc_km": 12,
+    "distance_to_lower_parel_km": 18,
+    "metro_connectivity": true,
+    "infrastructure_notes": "Oberoi Mall area. Aarey buffer.",
+    "flood_risk": "high",
+    "data_as_of": "2025-Q4"
+  },
+  "malad_west": {
+    "name": "Malad West",
+    "avg_price_per_sqft": {
+      "min": 14000,
+      "median": 18500,
+      "max": 25000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.5,
+      "max": 6.5,
+      "typical": 5.0
+    },
+    "rental_yield_pct": 2.7,
+    "distance_to_bkc_km": 16,
+    "distance_to_lower_parel_km": 22,
+    "metro_connectivity": true,
+    "infrastructure_notes": "Inorbit Mall area. Dense residential.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "kandivali_west": {
+    "name": "Kandivali West",
+    "avg_price_per_sqft": {
+      "min": 13000,
+      "median": 17000,
+      "max": 23000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.0,
+      "max": 6.0,
+      "typical": 4.5
+    },
+    "rental_yield_pct": 2.9,
+    "distance_to_bkc_km": 19,
+    "distance_to_lower_parel_km": 25,
+    "metro_connectivity": true,
+    "infrastructure_notes": "Affordable suburb. Good schools.",
+    "flood_risk": "high",
+    "data_as_of": "2025-Q4"
+  },
+  "powai": {
+    "name": "Powai",
+    "avg_price_per_sqft": {
+      "min": 16000,
+      "median": 22000,
+      "max": 32000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 5.0,
+      "max": 9.0,
+      "typical": 6.5
+    },
+    "rental_yield_pct": 2.4,
+    "distance_to_bkc_km": 10,
+    "distance_to_lower_parel_km": 16,
+    "metro_connectivity": false,
+    "infrastructure_notes": "IT hub. IIT campus. Lake-facing.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "ghatkopar_west": {
+    "name": "Ghatkopar West",
+    "avg_price_per_sqft": {
+      "min": 15000,
+      "median": 20000,
+      "max": 28000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 4.0,
+      "max": 7.0,
+      "typical": 5.0
+    },
+    "rental_yield_pct": 2.6,
+    "distance_to_bkc_km": 8,
+    "distance_to_lower_parel_km": 12,
+    "metro_connectivity": true,
+    "infrastructure_notes": "Metro Line 1 station. Central hub.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "thane_west": {
+    "name": "Thane West",
+    "avg_price_per_sqft": {
+      "min": 10000,
+      "median": 14500,
+      "max": 22000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.0,
+      "max": 6.0,
+      "typical": 4.0
+    },
+    "rental_yield_pct": 3.0,
+    "distance_to_bkc_km": 20,
+    "distance_to_lower_parel_km": 25,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Lakeside living. Major townships.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "thane_east": {
+    "name": "Thane East",
+    "avg_price_per_sqft": {
+      "min": 8000,
+      "median": 12000,
+      "max": 17000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 2.5,
+      "max": 5.0,
+      "typical": 3.5
+    },
+    "rental_yield_pct": 3.2,
+    "distance_to_bkc_km": 22,
+    "distance_to_lower_parel_km": 28,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Affordable. Industrial transitioning.",
+    "flood_risk": "high",
+    "data_as_of": "2025-Q4"
+  },
+  "navi_mumbai_vashi": {
+    "name": "Vashi (Navi Mumbai)",
+    "avg_price_per_sqft": {
+      "min": 10000,
+      "median": 14000,
+      "max": 20000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.0,
+      "max": 6.0,
+      "typical": 4.0
+    },
+    "rental_yield_pct": 3.0,
+    "distance_to_bkc_km": 22,
+    "distance_to_lower_parel_km": 20,
+    "metro_connectivity": false,
+    "infrastructure_notes": "CIDCO planned. Trans-harbour link coming.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "navi_mumbai_kharghar": {
+    "name": "Kharghar (Navi Mumbai)",
+    "avg_price_per_sqft": {
+      "min": 8000,
+      "median": 12000,
+      "max": 17000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 2.5,
+      "max": 5.0,
+      "typical": 3.5
+    },
+    "rental_yield_pct": 3.2,
+    "distance_to_bkc_km": 30,
+    "distance_to_lower_parel_km": 28,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Central Park. NMIA proximity.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "navi_mumbai_panvel": {
+    "name": "Panvel",
+    "avg_price_per_sqft": {
+      "min": 5500,
+      "median": 8500,
+      "max": 13000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 2.0,
+      "max": 4.0,
+      "typical": 3.0
+    },
+    "rental_yield_pct": 3.5,
+    "distance_to_bkc_km": 40,
+    "distance_to_lower_parel_km": 35,
+    "metro_connectivity": false,
+    "infrastructure_notes": "NMIA nearby. Affordable entry. Long commute.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "lower_parel": {
+    "name": "Lower Parel",
+    "avg_price_per_sqft": {
+      "min": 30000,
+      "median": 45000,
+      "max": 70000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 7.0,
+      "max": 15.0,
+      "typical": 10.0
+    },
+    "rental_yield_pct": 2.0,
+    "distance_to_bkc_km": 5,
+    "distance_to_lower_parel_km": 0,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Mill lands premium. Phoenix Mall.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "worli": {
+    "name": "Worli",
+    "avg_price_per_sqft": {
+      "min": 35000,
+      "median": 55000,
+      "max": 90000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 8.0,
+      "max": 15.0,
+      "typical": 10.0
+    },
+    "rental_yield_pct": 1.8,
+    "distance_to_bkc_km": 4,
+    "distance_to_lower_parel_km": 3,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Ultra-premium. Sea-facing. Coastal road.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "dadar": {
+    "name": "Dadar",
+    "avg_price_per_sqft": {
+      "min": 25000,
+      "median": 35000,
+      "max": 50000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 5.0,
+      "max": 10.0,
+      "typical": 7.0
+    },
+    "rental_yield_pct": 2.2,
+    "distance_to_bkc_km": 6,
+    "distance_to_lower_parel_km": 4,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Central junction. Old housing stock.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "chembur": {
+    "name": "Chembur",
+    "avg_price_per_sqft": {
+      "min": 14000,
+      "median": 20000,
+      "max": 28000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 4.0,
+      "max": 7.0,
+      "typical": 5.0
+    },
+    "rental_yield_pct": 2.6,
+    "distance_to_bkc_km": 8,
+    "distance_to_lower_parel_km": 10,
+    "metro_connectivity": true,
+    "infrastructure_notes": "Harbour line. Eastern freeway access.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "mulund_west": {
+    "name": "Mulund West",
+    "avg_price_per_sqft": {
+      "min": 14000,
+      "median": 19000,
+      "max": 26000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.5,
+      "max": 6.5,
+      "typical": 5.0
+    },
+    "rental_yield_pct": 2.7,
+    "distance_to_bkc_km": 16,
+    "distance_to_lower_parel_km": 20,
+    "metro_connectivity": false,
+    "infrastructure_notes": "LBS Marg. Green cover. Good schools.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "vikhroli": {
+    "name": "Vikhroli",
+    "avg_price_per_sqft": {
+      "min": 13000,
+      "median": 18000,
+      "max": 25000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 4.0,
+      "max": 7.0,
+      "typical": 5.0
+    },
+    "rental_yield_pct": 2.7,
+    "distance_to_bkc_km": 10,
+    "distance_to_lower_parel_km": 15,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Godrej township. Eastern Express Highway.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "wadala": {
+    "name": "Wadala",
+    "avg_price_per_sqft": {
+      "min": 18000,
+      "median": 25000,
+      "max": 35000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 5.0,
+      "max": 8.0,
+      "typical": 6.0
+    },
+    "rental_yield_pct": 2.4,
+    "distance_to_bkc_km": 7,
+    "distance_to_lower_parel_km": 6,
+    "metro_connectivity": true,
+    "infrastructure_notes": "Monorail. BDD chawl redevelopment.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "dahisar": {
+    "name": "Dahisar",
+    "avg_price_per_sqft": {
+      "min": 11000,
+      "median": 15000,
+      "max": 20000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.0,
+      "max": 5.5,
+      "typical": 4.0
+    },
+    "rental_yield_pct": 3.0,
+    "distance_to_bkc_km": 26,
+    "distance_to_lower_parel_km": 32,
+    "metro_connectivity": true,
+    "infrastructure_notes": "Metro Line 9 planned. Affordable border.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "kalyan": {
+    "name": "Kalyan",
+    "avg_price_per_sqft": {
+      "min": 4500,
+      "median": 7000,
+      "max": 11000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 2.0,
+      "max": 4.0,
+      "typical": 2.5
+    },
+    "rental_yield_pct": 3.5,
+    "distance_to_bkc_km": 50,
+    "distance_to_lower_parel_km": 55,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Budget entry. Central line. Long commute.",
+    "flood_risk": "high",
+    "data_as_of": "2025-Q4"
+  },
+  "dombivli": {
+    "name": "Dombivli",
+    "avg_price_per_sqft": {
+      "min": 5000,
+      "median": 7500,
+      "max": 11000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 2.0,
+      "max": 4.0,
+      "typical": 2.5
+    },
+    "rental_yield_pct": 3.5,
+    "distance_to_bkc_km": 45,
+    "distance_to_lower_parel_km": 50,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Budget. Industrial + residential mix.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "navi_mumbai_nerul": {
+    "name": "Nerul (Navi Mumbai)",
+    "avg_price_per_sqft": {
+      "min": 9000,
+      "median": 13000,
+      "max": 19000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.0,
+      "max": 5.5,
+      "typical": 4.0
+    },
+    "rental_yield_pct": 3.0,
+    "distance_to_bkc_km": 25,
+    "distance_to_lower_parel_km": 22,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Planned city. Harbour line terminus.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "navi_mumbai_airoli": {
+    "name": "Airoli (Navi Mumbai)",
+    "avg_price_per_sqft": {
+      "min": 9000,
+      "median": 13000,
+      "max": 18000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.0,
+      "max": 5.5,
+      "typical": 4.0
+    },
+    "rental_yield_pct": 3.0,
+    "distance_to_bkc_km": 18,
+    "distance_to_lower_parel_km": 20,
+    "metro_connectivity": false,
+    "infrastructure_notes": "IT park corridor. Mindspace. Creek views.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "navi_mumbai_belapur": {
+    "name": "CBD Belapur (Navi Mumbai)",
+    "avg_price_per_sqft": {
+      "min": 9000,
+      "median": 13500,
+      "max": 19000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.0,
+      "max": 5.5,
+      "typical": 4.0
+    },
+    "rental_yield_pct": 2.9,
+    "distance_to_bkc_km": 24,
+    "distance_to_lower_parel_km": 22,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Navi Mumbai CBD. Harbour line.",
+    "flood_risk": "low",
+    "data_as_of": "2025-Q4"
+  },
+  "vile_parle": {
+    "name": "Vile Parle",
+    "avg_price_per_sqft": {
+      "min": 20000,
+      "median": 28000,
+      "max": 40000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 5.0,
+      "max": 9.0,
+      "typical": 6.5
+    },
+    "rental_yield_pct": 2.3,
+    "distance_to_bkc_km": 10,
+    "distance_to_lower_parel_km": 15,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Airport proximity. Good schools.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "santacruz": {
+    "name": "Santacruz",
+    "avg_price_per_sqft": {
+      "min": 22000,
+      "median": 30000,
+      "max": 45000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 5.0,
+      "max": 9.0,
+      "typical": 7.0
+    },
+    "rental_yield_pct": 2.3,
+    "distance_to_bkc_km": 6,
+    "distance_to_lower_parel_km": 12,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Airport adjacent. Linking Road.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  },
+  "jogeshwari": {
+    "name": "Jogeshwari",
+    "avg_price_per_sqft": {
+      "min": 13000,
+      "median": 17000,
+      "max": 23000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 3.5,
+      "max": 6.5,
+      "typical": 4.5
+    },
+    "rental_yield_pct": 2.8,
+    "distance_to_bkc_km": 12,
+    "distance_to_lower_parel_km": 18,
+    "metro_connectivity": true,
+    "infrastructure_notes": "JVLR access. Metro Line 7.",
+    "flood_risk": "high",
+    "data_as_of": "2025-Q4"
+  },
+  "mira_road": {
+    "name": "Mira Road",
+    "avg_price_per_sqft": {
+      "min": 7000,
+      "median": 10000,
+      "max": 14000
+    },
+    "maintenance_per_sqft_monthly": {
+      "min": 2.0,
+      "max": 4.5,
+      "typical": 3.0
+    },
+    "rental_yield_pct": 3.3,
+    "distance_to_bkc_km": 30,
+    "distance_to_lower_parel_km": 36,
+    "metro_connectivity": false,
+    "infrastructure_notes": "Budget. Western line extension.",
+    "flood_risk": "medium",
+    "data_as_of": "2025-Q4"
+  }
+}
