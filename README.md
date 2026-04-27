@@ -35,7 +35,6 @@ frontend assets for a Firebase-hosted web experience.
 - [Core Capabilities](#core-capabilities)
 - [Technology Stack](#technology-stack)
 - [Repository Structure](#repository-structure)
-- [System Diagrams](#system-diagrams)
 - [Application Flow](#application-flow)
 - [Backend Architecture](#backend-architecture)
 - [AI Agent Architecture](#ai-agent-architecture)
@@ -73,6 +72,40 @@ The application turns buyer inputs into:
 The system separates arithmetic from AI interpretation. Financial calculations
 are deterministic Python functions. LLM agents consume those computed numbers
 and produce structured explanations, challenges, and final narratives.
+
+At a product level, NIV AI sits between the buyer, the property decision, and
+the expert workflows that usually happen after a risky purchase is already in
+motion.
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#fef3c7","primaryBorderColor":"#f59e0b","primaryTextColor":"#111827","lineColor":"#475569","secondaryColor":"#dbeafe","tertiaryColor":"#dcfce7","fontFamily":"Inter, Arial"}}}%%
+flowchart LR
+    Buyer["fa:fa-home Buyer"]:::person --> Web["fa:fa-desktop NIV AI Web App"]:::product
+    Family["fa:fa-users Family / Co-buyer"]:::person --> Web
+    Advisor["fa:fa-briefcase CA / Bank / Lawyer"]:::expert <-- "PDF report + action items" --> Buyer
+
+    Web --> Decision["fa:fa-scale-balanced Decision Intelligence Result"]:::decision
+
+    Decision --> Verdict["fa:fa-circle-check Buy / Wait / Avoid verdict"]:::safe
+    Decision --> Numbers["fa:fa-calculator EMI, FOIR, runway, true cost"]:::math
+    Decision --> Risks["fa:fa-triangle-exclamation Stress scenarios + risk factors"]:::risk
+    Decision --> Bias["fa:fa-brain Behavioral bias flags"]:::ai
+    Decision --> Actions["fa:fa-file-signature Negotiation, bank, document actions"]:::action
+
+    Gemini["fa:fa-bolt Gemini + Groq + OpenRouter"]:::ai --> Web
+    Firebase["fa:fa-fire Firebase / Firestore"]:::cloud --> Web
+    Storage["fa:fa-cloud Cloud Storage"]:::cloud --> Web
+
+    classDef person fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0f172a;
+    classDef product fill:#fef3c7,stroke:#d97706,stroke-width:3px,color:#111827;
+    classDef decision fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#111827;
+    classDef safe fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef math fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
+    classDef risk fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
+    classDef ai fill:#fae8ff,stroke:#c026d3,stroke-width:2px,color:#3b0764;
+    classDef action fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#431407;
+    classDef cloud fill:#f1f5f9,stroke:#64748b,stroke-width:2px,color:#0f172a;
+```
 
 ---
 
@@ -182,7 +215,60 @@ and produce structured explanations, challenges, and final narratives.
 | Storage | Google Cloud Storage | PDF report storage and signed URLs |
 | PDF | ReportLab | Report rendering |
 | Auth | Firebase Auth, Firebase Admin SDK | Token verification and scoped data access |
-| Deployment | Docker, Cloud Run | Containerized backend deployment |
+| Deployment | Docker, Cloud Run or Railway | Containerized backend deployment |
+
+The stack is intentionally split into static delivery, deterministic compute,
+AI reasoning, and cloud persistence so each layer can evolve independently.
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#eff6ff","primaryBorderColor":"#2563eb","lineColor":"#334155","fontFamily":"Inter, Arial"}}}%%
+flowchart LR
+    subgraph FE["fa:fa-window-maximize Frontend"]
+        HTML["fa:fa-code HTML"]:::frontend
+        CSS["fa:fa-palette CSS"]:::frontend
+        JS["fa:fa-js JavaScript"]:::frontend
+        FirebaseHosting["fa:fa-fire Firebase Hosting"]:::hosting
+    end
+
+    subgraph BE["fa:fa-server Backend"]
+        Python["fa:fa-python Python 3.11"]:::backend
+        FastAPI["fa:fa-bolt FastAPI"]:::backend
+        Pydantic["fa:fa-check-double Pydantic"]:::backend
+        Docker["fa:fa-box Docker"]:::deploy
+    end
+
+    subgraph AI["fa:fa-brain AI Providers"]
+        Groq["fa:fa-gauge-high Groq"]:::ai
+        GeminiFlash["fa:fa-gem Gemini Flash"]:::ai
+        GeminiVision["fa:fa-image Gemini Vision"]:::vision
+        OpenRouter["fa:fa-route OpenRouter"]:::ai
+    end
+
+    subgraph DATA["fa:fa-database Data + Reports"]
+        Firestore["fa:fa-fire Firestore"]:::data
+        GCS["fa:fa-cloud Cloud Storage"]:::data
+        ReportLab["fa:fa-file-pdf ReportLab"]:::report
+    end
+
+    FirebaseHosting --> FastAPI
+    FastAPI --> Groq
+    FastAPI --> GeminiFlash
+    FastAPI --> GeminiVision
+    FastAPI --> OpenRouter
+    FastAPI --> Firestore
+    FastAPI --> GCS
+    ReportLab --> GCS
+    Docker --> FastAPI
+
+    classDef frontend fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
+    classDef hosting fill:#fff7ed,stroke:#f97316,stroke-width:2px,color:#431407;
+    classDef backend fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef deploy fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#082f49;
+    classDef ai fill:#fae8ff,stroke:#c026d3,stroke-width:2px,color:#3b0764;
+    classDef vision fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#422006;
+    classDef data fill:#f1f5f9,stroke:#475569,stroke-width:2px,color:#0f172a;
+    classDef report fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
+```
 
 ---
 
@@ -229,535 +315,91 @@ NIV-AI/
 `-- README.md
 ```
 
----
+## Application Flow
 
-## System Diagrams
-
-The diagrams below are intentionally detailed and presentation-ready. They can
-be rendered directly by GitHub or exported to PNG/SVG from any Mermaid renderer
-for slide decks.
-
-### 1. Product Context Diagram
+The user experience is deliberately shaped like a guided audit rather than a
+single calculator form. Each screen adds context that is later used by either
+the deterministic engines or the AI agents.
 
 ```mermaid
-flowchart LR
-    Buyer["Prospective Home Buyer"] --> Web["NIV AI Web App"]
-    Family["Family / Co-buyer"] --> Web
-    Advisor["CA / Bank / Lawyer"] <-- "PDF report and action items" --> Buyer
-
-    Web --> Decision["Decision Intelligence Result"]
-
-    Decision --> Verdict["Buy Safe / Buy Caution / Wait / Too Risky"]
-    Decision --> Numbers["EMI, FOIR, runway, true cost"]
-    Decision --> Risks["Stress scenarios and risk factors"]
-    Decision --> Bias["Behavioral bias flags"]
-    Decision --> Actions["Negotiation, savings, document, and bank actions"]
-
-    External["External Services"] --> Web
-    External --> Gemini["Gemini AI"]
-    External --> Firebase["Firebase / Firestore"]
-    External --> GCS["Cloud Storage"]
-```
-
-### 2. End-to-End User Journey
-
-```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#f8fafc","primaryBorderColor":"#334155","lineColor":"#64748b","fontFamily":"Inter, Arial"}}}%%
 flowchart TD
-    A["Land on NIV AI"] --> B["Read product promise"]
-    B --> C["Click Analyze My Property"]
-    C --> D["Start guided intake"]
+    A["fa:fa-door-open Landing Page"]:::entry --> B["fa:fa-mouse-pointer Analyze Property CTA"]:::entry
+    B --> C["fa:fa-list-check Guided Intake Wizard"]:::wizard
 
-    D --> E["Financial profile"]
-    E --> E1["Monthly income"]
-    E --> E2["Existing EMIs"]
-    E --> E3["Expenses"]
-    E --> E4["Liquid savings"]
-    E --> E5["Current rent"]
+    C --> E["fa:fa-wallet Financial Profile"]:::finance
+    E --> E1["Income + co-borrower income"]:::finance
+    E --> E2["Savings, rent, expenses"]:::finance
+    E --> E3["Existing EMIs"]:::finance
 
-    E --> F["Property profile"]
-    F --> F1["Price and location"]
-    F --> F2["Down payment"]
-    F --> F3["Tenure and rate"]
-    F --> F4["Builder and RERA"]
-    F --> F5["Ready-to-move or under-construction"]
+    C --> F["fa:fa-building Property Profile"]:::property
+    F --> F1["Price, location, carpet area"]:::property
+    F --> F2["Down payment, tenure, rate"]:::property
+    F --> F3["Builder, RERA, possession"]:::property
 
-    F --> G["Final risk context"]
-    G --> G1["Job stability"]
-    G --> G2["Expected growth"]
-    G --> G3["Dependents"]
-    G --> G4["Commute and notes"]
-    G --> G5["Optional photos and documents"]
+    C --> G["fa:fa-shield-halved Risk Context"]:::risk
+    G --> G1["Job stability + growth"]:::risk
+    G --> G2["Dependents + commute"]:::risk
+    G --> G3["Photos, QR, documents"]:::risk
 
-    G --> H{"Risk friction gate triggered?"}
-    H -- "Yes" --> I["Answer behavioral challenge questions"]
-    H -- "No" --> J["Run full analysis"]
+    G --> H{"fa:fa-brain Behavioral friction?"}:::decision
+    H -- "Triggered" --> I["Challenge questions"]:::ai
+    H -- "Not triggered" --> J["Run analysis"]:::action
     I --> J
 
-    J --> K["Loading and agent progress"]
-    K --> L["Backend computes deterministic finance"]
-    K --> M["AI agents interpret and challenge"]
-    L --> N["Report model"]
-    M --> N
+    J --> K["fa:fa-gears Finance engines"]:::math
+    J --> L["fa:fa-robot AI agent review"]:::ai
+    K --> M["fa:fa-chart-line Report model"]:::report
+    L --> M
+    M --> N["fa:fa-file-lines Verdict dashboard"]:::report
+    N --> O["What-if, compare, export, share"]:::action
 
-    N --> O["Verdict report"]
-    O --> P["Inspect key warnings"]
-    O --> Q["Review stress tests"]
-    O --> R["Explore what-if sliders"]
-    O --> S["Compare another property"]
-    O --> T["Export or share"]
+    classDef entry fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#082f49;
+    classDef wizard fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
+    classDef finance fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef property fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#422006;
+    classDef risk fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
+    classDef decision fill:#f5f3ff,stroke:#8b5cf6,stroke-width:3px,color:#2e1065;
+    classDef ai fill:#fae8ff,stroke:#c026d3,stroke-width:2px,color:#3b0764;
+    classDef math fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
+    classDef report fill:#f1f5f9,stroke:#475569,stroke-width:2px,color:#0f172a;
+    classDef action fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#431407;
 ```
 
-### 3. Use Case Diagram
+The major user-facing use cases are broader than the initial verdict. A buyer
+can inspect the analysis, compare alternatives, generate documents, and share a
+decision package with advisors.
 
 ```mermaid
-flowchart TB
-    User["Home Buyer"] --> UC0["NIV AI"]
-
-    UC0 --> UC1["Enter financial profile"]
-    UC0 --> UC2["Enter property details"]
-    UC0 --> UC3["Answer behavioral questions"]
-    UC0 --> UC4["Run affordability analysis"]
-    UC0 --> UC5["Run stress scenarios"]
-    UC0 --> UC6["Review AI verdict"]
-    UC0 --> UC7["Ask follow-up questions"]
-    UC0 --> UC8["Generate PDF report"]
-    UC0 --> UC9["Compare second property"]
-    UC0 --> UC10["Generate negotiation support"]
-
-    Admin["System Admin"] --> AD1["Configure environment"]
-    Admin --> AD2["Deploy frontend"]
-    Admin --> AD3["Deploy backend"]
-    Admin --> AD4["Monitor logs and failures"]
-
-    UC4 --> SYS1["Deterministic engines"]
-    UC5 --> SYS1
-    UC6 --> SYS2["AI agent pipeline"]
-    UC8 --> SYS3["PDF and Cloud Storage"]
-    UC10 --> SYS2
-```
-
-### 4. High-Level Architecture
-
-```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#ffffff","primaryBorderColor":"#111827","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
 flowchart LR
-    subgraph Client["Client Layer"]
-        Browser["Browser"]
-        Landing["Landing Page"]
-        Wizard["Analysis Wizard"]
-        Dashboard["Report Dashboard"]
-    end
+    Buyer["fa:fa-user Home Buyer"]:::actor --> Core["fa:fa-house NIV AI"]:::core
+    Admin["fa:fa-user-gear System Admin"]:::actor --> Ops["Operations"]:::ops
 
-    subgraph Hosting["Firebase Hosting"]
-        Static["Static HTML / CSS / JS"]
-        Rewrite["SPA-style rewrite rules"]
-    end
+    Core --> U1["Check affordability"]:::finance
+    Core --> U2["Find hidden costs"]:::finance
+    Core --> U3["Stress-test loan"]:::risk
+    Core --> U4["Detect bias"]:::ai
+    Core --> U5["Review verdict"]:::report
+    Core --> U6["Compare property"]:::action
+    Core --> U7["Generate report"]:::report
+    Core --> U8["Create counter-offer"]:::action
+    Core --> U9["Draft bank email"]:::action
 
-    subgraph API["FastAPI Backend on Cloud Run"]
-        Routes["HTTP Routes"]
-        WS["WebSocket Roundtable"]
-        Auth["Firebase Token Middleware"]
-        Orchestrator["Agent Orchestrator"]
-    end
+    Ops --> O1["Configure API keys"]:::ops
+    Ops --> O2["Deploy frontend"]:::ops
+    Ops --> O3["Deploy backend"]:::ops
+    Ops --> O4["Monitor costs"]:::ops
 
-    subgraph Finance["Deterministic Finance Layer"]
-        Cost["India Cost Engine"]
-        EMI["EMI and Cash Flow"]
-        Scenario["Scenario Simulator"]
-        Risk["Risk Scorer"]
-        Compute["Headless Compute Bundle"]
-    end
-
-    subgraph AI["AI Reasoning Layer"]
-        Behavioral["Behavioral Analysis"]
-        Validation["Validation Agent"]
-        Presentation["Presentation Agent"]
-        Discussion["Roundtable Engine"]
-        Synth["Decision Synthesizer"]
-        Brochure["Brochure Vision Analyzer"]
-    end
-
-    subgraph Cloud["Google Cloud / Firebase"]
-        Firestore["Firestore"]
-        Storage["Cloud Storage"]
-        Gemini["Gemini 2.0 Flash"]
-        AuthSvc["Firebase Auth"]
-    end
-
-    Browser --> Static
-    Static --> Landing
-    Static --> Wizard
-    Static --> Dashboard
-    Wizard --> Routes
-    Dashboard --> Routes
-    Dashboard --> WS
-
-    Routes --> Auth
-    Auth --> AuthSvc
-    Routes --> Finance
-    Routes --> Orchestrator
-    Orchestrator --> AI
-    AI --> Gemini
-    Brochure --> Gemini
-    Routes --> Firestore
-    Routes --> Storage
-    Finance --> Firestore
-    AI --> Firestore
+    classDef actor fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#082f49;
+    classDef core fill:#fef3c7,stroke:#d97706,stroke-width:3px,color:#422006;
+    classDef finance fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef risk fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
+    classDef ai fill:#fae8ff,stroke:#c026d3,stroke-width:2px,color:#3b0764;
+    classDef report fill:#f1f5f9,stroke:#475569,stroke-width:2px,color:#0f172a;
+    classDef action fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#431407;
+    classDef ops fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
 ```
-
-### 5. Backend Request Sequence
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant U as User Browser
-    participant F as Frontend JS
-    participant API as FastAPI Backend
-    participant DB as Firestore
-    participant Math as Deterministic Engines
-    participant AI as AI Orchestrator
-    participant Gemini as Gemini / Ollama
-    participant GCS as Cloud Storage
-
-    U->>F: Complete form and submit
-    F->>API: POST /analyze/{session_id}
-    API->>DB: Verify session ownership
-    API->>DB: Save financial inputs
-    API->>Math: Calculate true cost, EMI, scenarios, risk score
-    Math-->>API: Deterministic result bundle
-    API->>DB: Save simulation results
-    API->>DB: Load behavioral intake
-    API->>AI: Run analysis pipeline
-    AI->>Gemini: Behavioral analysis prompt
-    AI->>Gemini: Validation prompt
-    Gemini-->>AI: Structured JSON outputs
-    AI->>Gemini: Presentation / synthesis prompts
-    Gemini-->>AI: Report-ready JSON
-    AI-->>API: AnalysisResponse
-    API-->>F: Analysis result
-    F->>U: Render dashboard and verdict
-    U->>F: Request PDF report
-    F->>API: GET /report/{session_id}
-    API->>DB: Load verdict and report state
-    API->>GCS: Upload generated PDF
-    GCS-->>API: Signed URL
-    API-->>F: Report URL
-```
-
-### 6. Deterministic Finance Pipeline
-
-```mermaid
-flowchart TD
-    Input["UserInput"] --> Normalize["Normalize state, district, property type, buyer flags"]
-
-    Normalize --> Loan["Loan amount = property price - down payment"]
-    Normalize --> Cost["True acquisition cost"]
-    Normalize --> Afford["Affordability calculation"]
-
-    Cost --> GST["GST slab classifier"]
-    Cost --> Stamp["District stamp duty engine"]
-    Cost --> Fees["Hidden fee aggregator"]
-    Cost --> Total["True total cost"]
-
-    Afford --> EMI["Monthly EMI"]
-    Afford --> Ratio["EMI-to-income ratio"]
-    Afford --> Surplus["Monthly surplus after EMI"]
-    Afford --> Cash["12-month cash flow"]
-    Afford --> FOIR["FOIR underwriting check"]
-    Afford --> LTV["Property age and LTV risk"]
-
-    EMI --> Scenario["Scenario simulator"]
-    Surplus --> Scenario
-    Cash --> Scenario
-
-    Scenario --> S1["Base case"]
-    Scenario --> S2["30 percent income drop"]
-    Scenario --> S3["6-month job loss"]
-    Scenario --> S4["2 percent rate hike"]
-    Scenario --> S5["INR 5L emergency"]
-
-    S1 --> Risk["Composite risk scorer"]
-    S2 --> Risk
-    S3 --> Risk
-    S4 --> Risk
-    S5 --> Risk
-    Ratio --> Risk
-    FOIR --> Risk
-
-    Risk --> Output["ComputeAllOutput"]
-    Total --> Output
-    LTV --> Output
-```
-
-### 7. AI Agent Pipeline
-
-```mermaid
-flowchart LR
-    subgraph Inputs["Shared Blackboard Inputs"]
-        UI["User input"]
-        BI["Behavioral intake"]
-        DR["Deterministic results"]
-        CTX["Conversation context"]
-    end
-
-    subgraph Parallel["Parallel First Pass"]
-        BA["Behavioral Analysis Agent"]
-        VA["Validation Agent"]
-    end
-
-    subgraph Presentation["Presentation Layer"]
-        PA["Presentation Agent"]
-        Charts["Chart data"]
-        Warnings["Warning cards"]
-        PDFModel["PDF content model"]
-    end
-
-    subgraph Roundtable["Live Specialist Roundtable"]
-        Marcus["Marcus: Financial Analyst"]
-        Zara["Zara: Risk Strategist"]
-        Soren["Soren: Behavioral Economist"]
-        Conv["Convergence Checker"]
-    end
-
-    subgraph Final["Final Synthesis"]
-        DS["Decision Synthesizer"]
-        Verdict["VerdictOutput"]
-        Audit["6-domain audit narrative"]
-    end
-
-    Inputs --> BA
-    Inputs --> VA
-    BA --> PA
-    VA --> PA
-    DR --> PA
-    PA --> Charts
-    PA --> Warnings
-    PA --> PDFModel
-
-    BA --> Marcus
-    VA --> Zara
-    DR --> Marcus
-    DR --> Zara
-    BI --> Soren
-    Marcus --> Conv
-    Zara --> Conv
-    Soren --> Conv
-    Conv --> DS
-    PDFModel --> DS
-    DS --> Verdict
-    DS --> Audit
-```
-
-### 8. Roundtable State Machine
-
-```mermaid
-stateDiagram-v2
-    [*] --> WaitingForAnalysis
-    WaitingForAnalysis --> Round1Opening: analysis complete
-    Round1Opening --> Round2Challenge: all agents observe
-    Round2Challenge --> Round3Converge: direct challenges complete
-    Round3Converge --> CheckConvergence: agents build position
-    CheckConvergence --> DecisionSynthesis: converged
-    CheckConvergence --> Round4Conclusion: not converged and max round not reached
-    Round4Conclusion --> DecisionSynthesis: final conclusions complete
-    DecisionSynthesis --> VerdictReady: synthesizer returns JSON
-    VerdictReady --> PersistVerdict: stream verdict to client
-    PersistVerdict --> [*]
-
-    WaitingForAnalysis --> Error: missing blackboard state
-    Round1Opening --> Error: AI call failure
-    Round2Challenge --> Error: invalid agent output
-    Round3Converge --> Error: websocket disconnect
-    Error --> [*]
-```
-
-### 9. Firestore Data Model
-
-```mermaid
-erDiagram
-    USER ||--o{ SESSION : owns
-    SESSION ||--o{ BEHAVIORAL_INTAKE : contains
-    SESSION ||--o{ FINANCIAL_INPUT : stores
-    SESSION ||--o{ SIMULATION_RESULT : stores
-    SESSION ||--o{ DISCUSSION_MESSAGE : streams
-    SESSION ||--o{ VERDICT : produces
-    SESSION ||--o{ REPORT : generates
-
-    USER {
-        string uid
-        string auth_provider
-    }
-
-    SESSION {
-        string session_id
-        string user_id
-        string title
-        string city
-        string state
-        string status
-        string created_at
-        string updated_at
-        number property_price
-        string risk_label
-        string verdict_summary
-    }
-
-    BEHAVIORAL_INTAKE {
-        number question_id
-        string question
-        string answer
-        string bias_signal
-    }
-
-    FINANCIAL_INPUT {
-        number monthly_income
-        number monthly_expenses
-        number total_savings
-        number down_payment
-        number property_price
-        number annual_interest_rate
-        number tenure_years
-        string property_type
-    }
-
-    SIMULATION_RESULT {
-        object india_cost_breakdown
-        object financial_reality
-        object all_scenarios
-        object risk_score
-    }
-
-    DISCUSSION_MESSAGE {
-        string agent
-        string message_type
-        string content
-        number round
-        string timestamp
-        string directed_at
-    }
-
-    VERDICT {
-        string verdict
-        number confidence
-        array primary_reasons
-        array key_warnings
-        number safe_price_recommendation
-        string final_narrative
-    }
-
-    REPORT {
-        string gcs_url
-        string generated_at
-    }
-```
-
-### 10. API Map
-
-```mermaid
-flowchart TB
-    Client["Frontend Client"] --> Health["GET /health"]
-    Client --> Calc["POST /api/v1/calculate"]
-    Client --> SessionStart["POST /session/start"]
-    Client --> SessionGet["GET /session/{session_id}"]
-    Client --> History["GET /session/history/{user_id}"]
-    Client --> Behavioral["POST /behavioral/{session_id}"]
-    Client --> Analyze["POST /analyze/{session_id}"]
-    Client --> Brochure["POST /analyze/brochure/{session_id}"]
-    Client --> Conversation["POST /conversation/{session_id}"]
-    Client --> Roundtable["WS /roundtable/{session_id}"]
-    Client --> Report["GET /report/{session_id}"]
-
-    Calc --> PureMath["No-auth deterministic math path"]
-    SessionStart --> Auth["Firebase auth required"]
-    SessionGet --> Auth
-    History --> Auth
-    Behavioral --> Auth
-    Analyze --> Auth
-    Brochure --> Auth
-    Conversation --> Auth
-    Roundtable --> Auth
-    Report --> Auth
-
-    Analyze --> FullPipeline["Financial math + AI orchestration"]
-    Brochure --> Vision["Gemini Vision extraction"]
-    Roundtable --> Streaming["Live agent discussion stream"]
-    Report --> PDF["PDF generation + signed URL"]
-```
-
-### 11. Deployment Topology
-
-```mermaid
-flowchart LR
-    Dev["Developer"] --> Git["GitHub Repository"]
-    Git --> Build["Container Build"]
-    Build --> Image["Docker Image"]
-    Image --> Run["Cloud Run Service"]
-
-    Dev --> FirebaseDeploy["Firebase Deploy"]
-    FirebaseDeploy --> Hosting["Firebase Hosting CDN"]
-
-    Run --> Env["Runtime Environment Variables"]
-    Run --> Firestore["Firestore"]
-    Run --> Bucket["Cloud Storage Bucket"]
-    Run --> Gemini["Gemini API"]
-
-    Hosting --> Browser["User Browser"]
-    Browser --> Run
-```
-
-### 12. Security and Access Control Flow
-
-```mermaid
-flowchart TD
-    Browser["Browser"] --> Token["Firebase ID token"]
-    Token --> API["FastAPI dependency verify_token"]
-    API --> Admin["Firebase Admin verify_id_token"]
-    Admin --> UID["Authenticated UID"]
-
-    UID --> SessionCheck["Load session from Firestore"]
-    SessionCheck --> Owner{"session.user_id equals UID?"}
-    Owner -- "Yes" --> Allow["Allow request"]
-    Owner -- "No" --> Deny["403 Access denied"]
-
-    Allow --> Data["Read/write scoped session data"]
-    Deny --> Stop["Stop execution"]
-```
-
-### 13. Cost Model Diagram
-
-```mermaid
-flowchart TB
-    Cost["Operating Cost Drivers"] --> Hosting["Firebase Hosting"]
-    Cost --> API["Cloud Run"]
-    Cost --> DB["Firestore"]
-    Cost --> Storage["Cloud Storage"]
-    Cost --> AI["Gemini API"]
-    Cost --> Messaging["WhatsApp / integrations"]
-
-    Hosting --> H1["Bandwidth"]
-    Hosting --> H2["Stored frontend assets"]
-
-    API --> A1["Request count"]
-    API --> A2["CPU and memory duration"]
-    API --> A3["Cold starts and concurrency"]
-
-    DB --> D1["Document reads"]
-    DB --> D2["Document writes"]
-    DB --> D3["Stored reports metadata"]
-
-    Storage --> S1["PDF object storage"]
-    Storage --> S2["Signed URL downloads"]
-
-    AI --> G1["Prompt tokens"]
-    AI --> G2["Output tokens"]
-    AI --> G3["Vision/document calls"]
-
-    Messaging --> M1["WhatsApp template sends"]
-    Messaging --> M2["Third-party service fees"]
-```
-
----
-
-## Application Flow
 
 ### Landing Page
 
@@ -845,6 +487,143 @@ Key backend responsibilities:
 - generate PDF reports,
 - upload reports to GCS.
 
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#eff6ff","primaryBorderColor":"#2563eb","lineColor":"#334155","fontFamily":"Inter, Arial"}}}%%
+flowchart LR
+    subgraph Client["fa:fa-desktop Client Layer"]
+        Browser["Browser"]:::client
+        Wizard["Analysis Wizard"]:::client
+        Dashboard["Report Dashboard"]:::client
+    end
+
+    subgraph API["fa:fa-server FastAPI Service"]
+        Routes["HTTP routes"]:::api
+        Auth["Firebase token middleware"]:::security
+        WS["Roundtable WebSocket"]:::api
+        Orchestrator["Agent orchestrator"]:::ai
+    end
+
+    subgraph Finance["fa:fa-calculator Deterministic Finance"]
+        Cost["India cost engine"]:::math
+        EMI["EMI + cash flow"]:::math
+        Scenario["Scenario simulator"]:::risk
+        Score["Risk scorer"]:::risk
+    end
+
+    subgraph Cloud["fa:fa-cloud Cloud Services"]
+        Firestore["Firestore"]:::cloud
+        Storage["Cloud Storage"]:::cloud
+        Gemini["Gemini / Groq / OpenRouter"]:::ai
+    end
+
+    Browser --> Wizard
+    Browser --> Dashboard
+    Wizard --> Routes
+    Dashboard --> Routes
+    Dashboard --> WS
+    Routes --> Auth
+    Auth --> Firestore
+    Routes --> Finance
+    Routes --> Orchestrator
+    Orchestrator --> Gemini
+    Finance --> Firestore
+    Routes --> Storage
+
+    classDef client fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
+    classDef api fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef security fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
+    classDef math fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#422006;
+    classDef risk fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#431407;
+    classDef ai fill:#fae8ff,stroke:#c026d3,stroke-width:2px,color:#3b0764;
+    classDef cloud fill:#f1f5f9,stroke:#475569,stroke-width:2px,color:#0f172a;
+```
+
+The full analysis request keeps arithmetic, persistence, AI interpretation, and
+report rendering as separate responsibilities.
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"actorBkg":"#dbeafe","actorBorder":"#2563eb","actorTextColor":"#172554","activationBkgColor":"#fef3c7","activationBorderColor":"#d97706","sequenceNumberColor":"#ffffff","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
+sequenceDiagram
+    autonumber
+    participant U as Buyer Browser
+    participant F as Frontend JS
+    participant API as FastAPI
+    participant DB as Firestore
+    participant Math as Finance Engines
+    participant AI as Agent Orchestrator
+    participant LLM as Groq / Gemini / OpenRouter
+    participant GCS as Cloud Storage
+
+    U->>F: Submit property audit form
+    F->>API: POST /analyze/{session_id}
+    API->>DB: Verify session ownership
+    API->>DB: Save financial inputs
+    API->>Math: Run cost, EMI, FOIR, scenarios, risk score
+    Math-->>API: Deterministic result bundle
+    API->>DB: Save simulation results
+    API->>AI: Run behavioral, validation, presentation agents
+    AI->>LLM: Structured JSON prompts
+    LLM-->>AI: Agent outputs
+    AI-->>API: AnalysisResponse
+    API-->>F: Verdict and report data
+    F-->>U: Render dashboard
+    U->>F: Request PDF / export
+    F->>API: GET /report/{session_id}
+    API->>GCS: Upload generated PDF
+    GCS-->>API: Signed URL
+    API-->>F: Download link
+```
+
+The deterministic path is the backbone of the product. It is intentionally
+pure Python and should remain testable without calling external model APIs.
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#ecfeff","primaryBorderColor":"#0891b2","lineColor":"#334155","fontFamily":"Inter, Arial"}}}%%
+flowchart TD
+    Input["fa:fa-keyboard UserInput"]:::input --> Normalize["Normalize state, district, buyer flags"]:::input
+    Normalize --> Loan["Loan amount"]:::math
+    Normalize --> Cost["True acquisition cost"]:::cost
+    Normalize --> Afford["Affordability calculation"]:::math
+
+    Cost --> GST["GST slab classifier"]:::cost
+    Cost --> Stamp["District stamp duty"]:::cost
+    Cost --> Fees["Bank + legal + maintenance fees"]:::cost
+    Cost --> Total["True total cost"]:::cost
+
+    Afford --> EMI["Monthly EMI"]:::math
+    Afford --> Ratio["EMI / income"]:::math
+    Afford --> Surplus["Post-EMI surplus"]:::math
+    Afford --> Cash["12-month cash flow"]:::math
+    Afford --> FOIR["FOIR underwriting check"]:::risk
+    Afford --> LTV["Building age / LTV risk"]:::risk
+
+    EMI --> Scenario["Stress scenario simulator"]:::scenario
+    Surplus --> Scenario
+    Cash --> Scenario
+    Scenario --> S1["Base case"]:::scenario
+    Scenario --> S2["30 percent income drop"]:::scenario
+    Scenario --> S3["6-month job loss"]:::scenario
+    Scenario --> S4["2 percent rate hike"]:::scenario
+    Scenario --> S5["INR 5L emergency"]:::scenario
+
+    S1 --> RiskScore["Composite risk score"]:::risk
+    S2 --> RiskScore
+    S3 --> RiskScore
+    S4 --> RiskScore
+    S5 --> RiskScore
+    FOIR --> RiskScore
+    Ratio --> RiskScore
+    Total --> Output["ComputeAllOutput"]:::output
+    RiskScore --> Output
+
+    classDef input fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#082f49;
+    classDef math fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef cost fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#422006;
+    classDef scenario fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#431407;
+    classDef risk fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
+    classDef output fill:#ede9fe,stroke:#7c3aed,stroke-width:3px,color:#2e1065;
+```
+
 ### Important Backend Modules
 
 | File | Responsibility |
@@ -909,6 +688,95 @@ The blackboard includes:
 - active flags,
 - open questions.
 
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#fae8ff","primaryBorderColor":"#c026d3","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
+flowchart LR
+    subgraph BB["fa:fa-clipboard Shared Blackboard"]
+        UI["User input"]:::input
+        BI["Behavioral intake"]:::input
+        DR["Deterministic results"]:::math
+        CTX["Conversation context"]:::input
+    end
+
+    subgraph FirstPass["Parallel first pass"]
+        BA["fa:fa-brain Behavioral Analysis"]:::ai
+        VA["fa:fa-magnifying-glass Validation Agent"]:::ai
+    end
+
+    subgraph Presentation["Presentation assembly"]
+        PA["fa:fa-chart-pie Presentation Agent"]:::report
+        Charts["Chart data"]:::report
+        Cards["Warning cards"]:::risk
+        PDFModel["PDF content model"]:::report
+    end
+
+    subgraph Roundtable["Live specialist roundtable"]
+        Marcus["Marcus: Financial Analyst"]:::expert
+        Zara["Zara: Risk Strategist"]:::risk
+        Soren["Soren: Behavioral Economist"]:::expert
+        Conv["Convergence Checker"]:::decision
+    end
+
+    subgraph Final["Final synthesis"]
+        DS["fa:fa-pen-nib Decision Synthesizer"]:::ai
+        Verdict["VerdictOutput"]:::decision
+        Audit["6-domain audit"]:::report
+    end
+
+    BB --> BA
+    BB --> VA
+    BA --> PA
+    VA --> PA
+    DR --> PA
+    PA --> Charts
+    PA --> Cards
+    PA --> PDFModel
+    BA --> Soren
+    VA --> Zara
+    DR --> Marcus
+    Marcus --> Conv
+    Zara --> Conv
+    Soren --> Conv
+    Conv --> DS
+    PDFModel --> DS
+    DS --> Verdict
+    DS --> Audit
+
+    classDef input fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#082f49;
+    classDef math fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef ai fill:#fae8ff,stroke:#c026d3,stroke-width:2px,color:#3b0764;
+    classDef report fill:#f1f5f9,stroke:#475569,stroke-width:2px,color:#0f172a;
+    classDef risk fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
+    classDef expert fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#422006;
+    classDef decision fill:#ede9fe,stroke:#7c3aed,stroke-width:3px,color:#2e1065;
+```
+
+The roundtable has a clear discussion arc. It is designed to avoid repetitive
+agent output by changing the task in each round: observe, challenge, converge,
+then conclude.
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#fef3c7","primaryBorderColor":"#d97706","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
+stateDiagram-v2
+    [*] --> WaitingForAnalysis
+    WaitingForAnalysis --> Round1Opening: analysis complete
+    Round1Opening --> Round2Challenge: opening observations
+    Round2Challenge --> Round3Converge: direct challenges complete
+    Round3Converge --> CheckConvergence: positions established
+    CheckConvergence --> DecisionSynthesis: converged
+    CheckConvergence --> Round4Conclusion: one more round needed
+    Round4Conclusion --> DecisionSynthesis: final conclusions
+    DecisionSynthesis --> VerdictReady: synthesizer returns JSON
+    VerdictReady --> PersistVerdict: stream verdict first
+    PersistVerdict --> [*]
+
+    WaitingForAnalysis --> Error: missing blackboard state
+    Round1Opening --> Error: AI call failure
+    Round2Challenge --> Error: invalid JSON
+    Round3Converge --> Error: websocket disconnect
+    Error --> [*]
+```
+
 ---
 
 ## Data Model
@@ -937,9 +805,127 @@ Important model groups:
   - `AnalysisResponse`,
   - `ReportOutput`.
 
+The persisted Firestore model is session-centered. Every behavioral answer,
+input snapshot, simulation output, discussion message, verdict, and report is
+attached back to a buyer-owned session.
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#f1f5f9","primaryBorderColor":"#475569","lineColor":"#64748b","fontFamily":"Inter, Arial"}}}%%
+erDiagram
+    USER ||--o{ SESSION : owns
+    SESSION ||--o{ BEHAVIORAL_INTAKE : contains
+    SESSION ||--o{ FINANCIAL_INPUT : stores
+    SESSION ||--o{ SIMULATION_RESULT : stores
+    SESSION ||--o{ DISCUSSION_MESSAGE : streams
+    SESSION ||--o{ VERDICT : produces
+    SESSION ||--o{ REPORT : generates
+
+    USER {
+        string uid
+        string auth_provider
+    }
+
+    SESSION {
+        string session_id
+        string user_id
+        string title
+        string city
+        string state
+        string status
+        string created_at
+        string updated_at
+        number property_price
+        string risk_label
+        string verdict_summary
+    }
+
+    BEHAVIORAL_INTAKE {
+        number question_id
+        string question
+        string answer
+        string bias_signal
+    }
+
+    FINANCIAL_INPUT {
+        number monthly_income
+        number monthly_expenses
+        number total_savings
+        number down_payment
+        number property_price
+        number annual_interest_rate
+        number tenure_years
+        string property_type
+    }
+
+    SIMULATION_RESULT {
+        object india_cost_breakdown
+        object financial_reality
+        object all_scenarios
+        object risk_score
+    }
+
+    DISCUSSION_MESSAGE {
+        string agent
+        string message_type
+        string content
+        number round
+        string timestamp
+        string directed_at
+    }
+
+    VERDICT {
+        string verdict
+        number confidence
+        array primary_reasons
+        array key_warnings
+        number safe_price_recommendation
+        string final_narrative
+    }
+
+    REPORT {
+        string gcs_url
+        string generated_at
+    }
+```
+
 ---
 
 ## API Surface
+
+The API surface separates fast deterministic calculation, authenticated session
+workflows, AI-heavy analysis, streaming roundtable discussion, and report
+generation.
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#eff6ff","primaryBorderColor":"#2563eb","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
+flowchart TB
+    Client["fa:fa-desktop Frontend Client"]:::client --> Health["GET /health"]:::public
+    Client --> Calc["POST /api/v1/calculate"]:::public
+    Client --> SessionStart["POST /session/start"]:::auth
+    Client --> SessionGet["GET /session/{session_id}"]:::auth
+    Client --> History["GET /session/history/{user_id}"]:::auth
+    Client --> Behavioral["POST /behavioral/{session_id}"]:::auth
+    Client --> Analyze["POST /analyze/{session_id}"]:::analysis
+    Client --> Brochure["POST /analyze/brochure/{session_id}"]:::vision
+    Client --> Conversation["POST /conversation/{session_id}"]:::analysis
+    Client --> Roundtable["WS /roundtable/{session_id}"]:::stream
+    Client --> Report["GET /report/{session_id}"]:::report
+
+    Calc --> Math["Deterministic engines only"]:::math
+    Analyze --> Full["Finance + AI orchestration"]:::analysis
+    Brochure --> GeminiVision["Gemini Vision extraction"]:::vision
+    Roundtable --> Live["Live specialist discussion"]:::stream
+    Report --> PDF["PDF generation + signed URL"]:::report
+
+    classDef client fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
+    classDef public fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef auth fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#422006;
+    classDef analysis fill:#fae8ff,stroke:#c026d3,stroke-width:2px,color:#3b0764;
+    classDef vision fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
+    classDef stream fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#431407;
+    classDef report fill:#f1f5f9,stroke:#475569,stroke-width:2px,color:#0f172a;
+    classDef math fill:#ecfeff,stroke:#0891b2,stroke-width:2px,color:#164e63;
+```
 
 ### Health
 
@@ -1175,9 +1161,44 @@ Recommended additional validation:
 
 ## Deployment
 
-### Backend: Cloud Run
+The repository supports a containerized backend and static frontend deployment.
+The live deployment observed during analysis uses Firebase Hosting for the
+frontend and a containerized FastAPI backend exposed over HTTPS.
 
-The `Dockerfile` builds a Python 3.11 container and starts Uvicorn:
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#f8fafc","primaryBorderColor":"#334155","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
+flowchart LR
+    Dev["fa:fa-code Developer"]:::dev --> Git["fa:fa-github GitHub Repository"]:::repo
+    Git --> Build["fa:fa-box Docker build"]:::build
+    Build --> BackendHost["fa:fa-server Container backend hosting"]:::backend
+
+    Dev --> FirebaseDeploy["fa:fa-fire Firebase deploy"]:::firebase
+    FirebaseDeploy --> Hosting["fa:fa-globe Firebase Hosting CDN"]:::firebase
+
+    BackendHost --> Env["Runtime environment variables"]:::config
+    BackendHost --> Firestore["Firestore"]:::cloud
+    BackendHost --> Bucket["Cloud Storage bucket"]:::cloud
+    BackendHost --> Providers["Groq + Gemini + OpenRouter"]:::ai
+
+    Hosting --> Browser["User browser"]:::client
+    Browser --> BackendHost
+
+    classDef dev fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#082f49;
+    classDef repo fill:#f1f5f9,stroke:#475569,stroke-width:2px,color:#0f172a;
+    classDef build fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
+    classDef backend fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef firebase fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#422006;
+    classDef config fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#431407;
+    classDef cloud fill:#f1f5f9,stroke:#64748b,stroke-width:2px,color:#0f172a;
+    classDef ai fill:#fae8ff,stroke:#c026d3,stroke-width:2px,color:#3b0764;
+    classDef client fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
+```
+
+### Backend: Container Hosting
+
+The `Dockerfile` builds a Python 3.11 container and starts Uvicorn. The same
+container shape can be deployed on Cloud Run, Railway, or any platform that can
+run an HTTP container on the configured `PORT`.
 
 ```dockerfile
 FROM python:3.11-slim
@@ -1189,7 +1210,7 @@ ENV PORT=8080
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
 ```
 
-Cloud Run should be configured with:
+The backend host should be configured with:
 
 - `PORT=8080`,
 - Firebase service account credentials,
@@ -1227,6 +1248,35 @@ firebase deploy --only hosting
 
 ## Security Model
 
+The security model is session-scoped: the backend verifies identity first, then
+checks ownership before reading or writing session data.
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#fee2e2","primaryBorderColor":"#dc2626","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
+flowchart TD
+    Browser["fa:fa-desktop Browser"]:::client --> Token["Firebase ID token"]:::auth
+    Token --> Verify["FastAPI verify_token dependency"]:::api
+    Verify --> Admin["Firebase Admin verify_id_token"]:::firebase
+    Admin --> UID["Authenticated UID"]:::safe
+
+    UID --> Session["Load session from Firestore"]:::data
+    Session --> Owner{"session.user_id == UID?"}:::decision
+    Owner -- "Yes" --> Allow["Allow scoped read/write"]:::safe
+    Owner -- "No" --> Deny["403 Access denied"]:::deny
+
+    Allow --> Data["Session, inputs, results, reports"]:::data
+    Deny --> Stop["Stop request"]:::deny
+
+    classDef client fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
+    classDef auth fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#422006;
+    classDef api fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef firebase fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#431407;
+    classDef safe fill:#bbf7d0,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef data fill:#f1f5f9,stroke:#475569,stroke-width:2px,color:#0f172a;
+    classDef decision fill:#ede9fe,stroke:#7c3aed,stroke-width:3px,color:#2e1065;
+    classDef deny fill:#fecaca,stroke:#b91c1c,stroke-width:2px,color:#450a0a;
+```
+
 ### Authentication
 
 Authenticated endpoints use Firebase ID token verification through Firebase
@@ -1263,42 +1313,210 @@ never delegated to the LLM.
 
 ## Cost Model
 
-The main operating cost drivers are:
-
-- Cloud Run request volume and CPU/memory duration,
-- Firestore reads and writes,
-- Cloud Storage report files and egress,
-- Firebase Hosting bandwidth,
-- Gemini input/output tokens,
-- Gemini Vision calls for brochures or documents,
-- any WhatsApp or third-party messaging integrations.
-
-### Estimated Build Cost Breakdown
-
-These are implementation estimates for a production hardening or rebuild effort.
-They are not cloud operating charges.
-
-| Workstream | Scope | Estimate USD |
-|---|---|---:|
-| Product discovery and architecture | workflows, data model, risk framework | 2,000-4,000 |
-| Frontend app | landing page, wizard, report UI, what-if tools | 5,000-9,000 |
-| Backend APIs | FastAPI, validation, report APIs, tool endpoints | 5,000-10,000 |
-| Deterministic finance engine | EMI, FOIR, hidden costs, stress scenarios | 3,000-6,000 |
-| AI agent pipeline | prompts, orchestration, Gemini integration | 4,000-8,000 |
-| Firebase/GCP integration | hosting, Firestore, Cloud Run, GCS, auth | 2,000-4,000 |
-| QA, security, deployment | testing, rate limits, monitoring, CI/CD | 2,000-5,000 |
-| Total | MVP-to-production range | 23,000-46,000 |
+NIV AI is designed to stay lean at MVP scale. The frontend, RERA scraping, RBI
+scraping, OCR, and QR scanning do not create meaningful per-user cost. The main
+variable cost is LLM and vision usage, followed by backend hosting once traffic
+grows beyond free or credit-backed tiers.
 
 ```mermaid
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#fef3c7","primaryBorderColor":"#d97706","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
+flowchart TB
+    Cost["fa:fa-coins Operational cost drivers"]:::root --> LLM["LLM API calls"]:::hot
+    Cost --> Vision["Gemini Vision photos"]:::hot
+    Cost --> Hosting["Firebase Hosting"]:::low
+    Cost --> Backend["Railway FastAPI container"]:::medium
+    Cost --> Domain["Optional .app domain"]:::low
+    Cost --> WhatsApp["WhatsApp report delivery"]:::medium
+    Cost --> GST["GST verification API"]:::low
+    Cost --> Free["MahaRERA, RBI, OCR, QR"]:::free
+
+    LLM --> Groq["Groq: low-cost structured reasoning"]:::provider
+    LLM --> GeminiFlash["Gemini Flash: synthesis + fallback"]:::provider
+    LLM --> OpenRouter["OpenRouter: provider routing"]:::provider
+    Vision --> Photo["3-5 property photos when uploaded"]:::vision
+    Free --> RERA["Public portal scraping"]:::free
+    Free --> RBI["RBI and bank-rate scraping"]:::free
+    Free --> OCR["Local pytesseract + pyzbar"]:::free
+
+    classDef root fill:#fef3c7,stroke:#d97706,stroke-width:3px,color:#422006;
+    classDef hot fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a;
+    classDef medium fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#431407;
+    classDef low fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#172554;
+    classDef free fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef provider fill:#fae8ff,stroke:#c026d3,stroke-width:2px,color:#3b0764;
+    classDef vision fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#2e1065;
+```
+
+### Operational Cost Breakdown
+
+#### 1. LLM API Calls: Primary Variable Cost
+
+Agents route across Groq, Gemini Flash, and OpenRouter with capability-based
+fallback. A full analysis uses roughly six agent calls, with each call ranging
+from a few hundred to a few thousand tokens depending on the depth of the
+report and whether narrative synthesis is requested.
+
+| Provider | Usage Scenario | Unit Cost | Notes |
+|---|---|---:|---|
+| Groq, Llama models | Primary reasoning for most agents | ~$0.05-$0.10 input / ~$0.30-$0.50 output per 1M tokens | Extremely cheap; the workhorse for high-volume structured JSON calls |
+| Gemini Flash via OpenRouter or direct API | Final synthesis, narrative reasoning, fallback agent reasoning, counter-offer letter | Varies by model tier | Used when stronger synthesis or fallback reliability is needed |
+| OpenRouter | Provider routing and fallback | Depends on selected model | Lets the system route around provider outages or model-specific limits |
+
+Estimated per-analysis LLM cost: **INR 2-INR 8 per full audit** for six agents
+when most calls are routed through the cheapest provider first.
+
+#### 2. Google Gemini Vision: Property Photo Inspection
+
+Gemini Flash Image / Gemini Vision processes uploaded property photos for
+visible defects and construction-quality signals.
+
+| Item | Cost |
+|---|---:|
+| Per image | $0.039, approximately INR 3.3 |
+| Per full analysis with 3-5 photos | Approximately INR 10-INR 17 |
+
+Buyers can upload up to five photos. This cost is only incurred when the photo
+inspection feature is actively used.
+
+#### 3. Frontend Hosting: Firebase
+
+The static frontend assets in `frontend/` are deployed through Firebase Hosting.
+
+| Firebase Plan | Included | Monthly Cost at MVP Scale |
+|---|---|---:|
+| Spark, free | 10 GB storage, 360 MB/day transfer | INR 0 |
+| Blaze, pay as you go | Beyond free quota: ~$0.20/GiB transfer | INR 0-INR 500 if traffic spikes |
+
+For the current MVP, the Spark free tier comfortably covers expected usage.
+
+#### 4. Backend Hosting: Railway Containerized FastAPI
+
+The backend can run as a Dockerized FastAPI service on Railway with autoscaling
+support.
+
+| Plan | Included | Estimated Monthly Cost |
+|---|---|---:|
+| Hobby | $5 free credit/month | INR 0-INR 400 if staying within credits |
+| Pro, small app | $20/month minimum, suitable for 1 vCPU and 1-2 GB RAM | Approximately INR 1,700 |
+
+A small-to-medium app on Railway typically runs $10-$30/month. For MVP traffic,
+such as a few hundred analyses per month, the Hobby tier with credits is
+sufficient.
+
+#### 5. Domain: Optional .app TLD
+
+The current deployed URL uses Firebase's free `*.web.app` subdomain:
+
+```text
+https://elegant-verbena-494508-a-e207e.web.app
+```
+
+A custom `.app` domain would add:
+
+| Item | Annual Cost |
+|---|---:|
+| `.app` domain registration / renewal | $22-$35/year, approximately INR 1,850-INR 2,900 |
+| Monthly equivalent | Approximately INR 150-INR 250 |
+
+Firebase Hosting includes the free `*.web.app` subdomain, so a custom domain is
+optional.
+
+#### 6. WhatsApp Business API: Report Delivery
+
+The WhatsApp integration can deliver verdicts and key numbers directly to a
+buyer.
+
+| Message Type | Cost per Message in India |
+|---|---:|
+| Utility, report delivery | INR 0.11-INR 0.12 |
+| First 1,000 service conversations/month | Free |
+
+Estimated monthly cost: if 500 reports are delivered via WhatsApp per month at
+the utility rate, the cost is roughly **INR 55-INR 60/month**.
+
+#### 7. GST Verification API
+
+The GST checker integration validates builder GSTIN numbers.
+
+| Provider Example | Cost |
+|---|---:|
+| Apify GST Verifier | $5 / 1,000 results, approximately INR 420 / 1,000 |
+| Per verification | Approximately INR 0.42 |
+
+At a few hundred verifications per month, this remains negligible:
+approximately **INR 20-INR 50/month**.
+
+#### 8. MahaRERA Lookup
+
+The RERA lookup integration scrapes the MahaRERA public portal. No paid API is
+used. It fetches builder registration status, complaint count, and completion
+data directly from Maharashtra RERA's publicly accessible website.
+
+Cost: **INR 0**.
+
+#### 9. RBI Repo Rate and Bank Rate Scraping
+
+The bank-rate integration scrapes `rbi.org.in` for the current repo rate and
+fetches top bank home loan rates.
+
+Cost: **INR 0**.
+
+#### 10. OCR and QR Code Scanning
+
+`pytesseract` for OCR and `pyzbar` for QR code scanning run locally as Python
+libraries. No external API is called.
+
+Cost: **INR 0**.
+
+### Consolidated Monthly Cost Estimate
+
+| Line Item | MVP Traffic, ~500 analyses/month | Moderate Traffic, ~2,000 analyses/month |
+|---|---:|---:|
+| LLM API calls, all agents | INR 1,500-INR 4,000 | INR 6,000-INR 16,000 |
+| Gemini Vision, photos | INR 500-INR 1,500 | INR 2,000-INR 6,000 |
+| Firebase Hosting | INR 0, free tier | INR 0-INR 400 |
+| Railway backend hosting | INR 0-INR 400, Hobby credits | INR 1,700-INR 2,500 |
+| Domain, `.app` annualized | INR 200/month | INR 200/month |
+| WhatsApp delivery | INR 55-INR 60 | INR 220-INR 240 |
+| GST verification | INR 20-INR 50 | INR 80-INR 200 |
+| MahaRERA scraping | INR 0 | INR 0 |
+| RBI scraping | INR 0 | INR 0 |
+| OCR / QR scanning | INR 0 | INR 0 |
+| Total | **INR 2,300-INR 6,200** | **INR 10,200-INR 25,300** |
+
+### Unit Economics
+
+| Metric | MVP Stage |
+|---|---:|
+| Cost per full analysis, six-agent audit with photos | Approximately INR 8-INR 25 |
+| Premium report price, future | INR 299-INR 999 |
+| Break-even at INR 499/report | Approximately 30-50 premium conversions/month |
+
+### Cost Summary
+
+NIV AI can run entirely free or near-free at MVP scale. Firebase Hosting,
+MahaRERA scraping, RBI scraping, OCR, and QR scanning all cost nothing for the
+expected early usage pattern. Railway's Hobby plan provides enough credits for
+light traffic, and LLM costs are minimized by routing the bulk of agent calls
+through Groq first.
+
+The primary scaling cost is LLM tokens. As usage grows, Groq remains the
+cost-minimizing backbone. Gemini Flash is used when synthesis quality, fallback
+reliability, or multimodal capability justifies the higher marginal cost. There
+is no fixed per-user infrastructure fee; costs scale mainly with the number of
+analyses and optional photo inspections.
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"pie1":"#dcfce7","pie2":"#fee2e2","pie3":"#dbeafe","pie4":"#ffedd5","pie5":"#ede9fe","pie6":"#f1f5f9","pie7":"#fae8ff","fontFamily":"Inter, Arial"}}}%%
 pie showData
-    title Estimated Implementation Cost Share
-    "Frontend and UX" : 7000
-    "Backend APIs" : 7500
-    "Finance Engine" : 4500
-    "AI Agent Pipeline" : 6000
-    "Cloud Integration" : 3000
-    "QA and Deployment" : 3500
-    "Discovery and Architecture" : 3000
+    title MVP Monthly Cost Share, Representative Midpoint
+    "LLM API calls" : 2750
+    "Gemini Vision" : 1000
+    "Firebase Hosting" : 0
+    "Railway Backend" : 200
+    "Domain" : 200
+    "WhatsApp" : 60
+    "GST Verification" : 35
 ```
 
 ---
