@@ -77,6 +77,14 @@ At a product level, NIV AI sits between the buyer, the property decision, and
 the expert workflows that usually happen after a risky purchase is already in
 motion.
 
+<p align="center">
+  <img src="https://cdn.simpleicons.org/googlegemini/8E75B2" alt="Gemini" width="18">
+  <img src="https://cdn.simpleicons.org/groq/F55036" alt="Groq" width="18">
+  <img src="https://cdn.simpleicons.org/openrouter/111111" alt="OpenRouter" width="18">
+  <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firebase" width="18">
+  <img src="https://cdn.simpleicons.org/googlecloud/4285F4" alt="Google Cloud" width="18">
+</p>
+
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#fef3c7","primaryBorderColor":"#f59e0b","primaryTextColor":"#111827","lineColor":"#475569","secondaryColor":"#dbeafe","tertiaryColor":"#dcfce7","fontFamily":"Inter, Arial"}}}%%
 flowchart LR
@@ -204,21 +212,35 @@ flowchart LR
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| Frontend | HTML, CSS, JavaScript | Static web app, wizard, report UI, charts |
-| Hosting | Firebase Hosting | CDN-backed static frontend hosting |
-| Backend | FastAPI | HTTP and WebSocket API layer |
-| Runtime | Python 3.11, Uvicorn | Backend execution |
-| Validation | Pydantic | Typed request and response schemas |
-| AI | Google Generative AI SDK, Groq, OpenRouter | Gemini Flash, Gemini Vision, structured agent calls, provider fallback |
-| Local AI fallback | Ollama | Local model path for development |
-| Database | Firestore | User sessions, inputs, simulation results, verdicts |
-| Storage | Google Cloud Storage | PDF report storage and signed URLs |
-| PDF | ReportLab | Report rendering |
-| Auth | Firebase Auth, Firebase Admin SDK | Token verification and scoped data access |
-| Deployment | Docker, Cloud Run or Railway | Containerized backend deployment |
+| Frontend | <img src="https://cdn.simpleicons.org/html5/E34F26" alt="HTML5" width="16"> HTML, <img src="https://cdn.simpleicons.org/css/1572B6" alt="CSS" width="16"> CSS, <img src="https://cdn.simpleicons.org/javascript/F7DF1E" alt="JavaScript" width="16"> JavaScript | Static web app, wizard, report UI, charts |
+| Hosting | <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firebase" width="16"> Firebase Hosting | CDN-backed static frontend hosting |
+| Backend | <img src="https://cdn.simpleicons.org/fastapi/009688" alt="FastAPI" width="16"> FastAPI | HTTP and WebSocket API layer |
+| Runtime | <img src="https://cdn.simpleicons.org/python/3776AB" alt="Python" width="16"> Python 3.11, <img src="https://cdn.simpleicons.org/python/3776AB" alt="Uvicorn" width="16"> Uvicorn | Backend execution |
+| Validation | <img src="https://cdn.simpleicons.org/pydantic/E92063" alt="Pydantic" width="16"> Pydantic | Typed request and response schemas |
+| AI | <img src="https://cdn.simpleicons.org/googlegemini/8E75B2" alt="Gemini" width="16"> Google Generative AI SDK, <img src="https://cdn.simpleicons.org/groq/F55036" alt="Groq" width="16"> Groq, <img src="https://cdn.simpleicons.org/openrouter/111111" alt="OpenRouter" width="16"> OpenRouter | Gemini Flash, Gemini Vision, structured agent calls, provider fallback |
+| Local AI fallback | <img src="https://cdn.simpleicons.org/ollama/000000" alt="Ollama" width="16"> Ollama | Local model path for development |
+| Database | <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firestore" width="16"> Firestore | User sessions, inputs, simulation results, verdicts |
+| Storage | <img src="https://cdn.simpleicons.org/googlecloud/4285F4" alt="Google Cloud Storage" width="16"> Google Cloud Storage | PDF report storage and signed URLs |
+| PDF | <img src="https://cdn.simpleicons.org/adobeacrobatreader/B91C1C" alt="PDF" width="16"> ReportLab | Report rendering |
+| Auth | <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firebase Auth" width="16"> Firebase Auth, Firebase Admin SDK | Token verification and scoped data access |
+| Deployment | <img src="https://cdn.simpleicons.org/docker/2496ED" alt="Docker" width="16"> Docker, <img src="https://cdn.simpleicons.org/googlecloud/4285F4" alt="Cloud Run" width="16"> Cloud Run, <img src="https://cdn.simpleicons.org/railway/0B0D0E" alt="Railway" width="16"> Railway | Containerized backend deployment |
 
 The stack is intentionally split into static delivery, deterministic compute,
 AI reasoning, and cloud persistence so each layer can evolve independently.
+
+<p align="center">
+  <img src="https://cdn.simpleicons.org/html5/E34F26" alt="HTML5" width="18">
+  <img src="https://cdn.simpleicons.org/css/1572B6" alt="CSS" width="18">
+  <img src="https://cdn.simpleicons.org/javascript/F7DF1E" alt="JavaScript" width="18">
+  <img src="https://cdn.simpleicons.org/python/3776AB" alt="Python" width="18">
+  <img src="https://cdn.simpleicons.org/fastapi/009688" alt="FastAPI" width="18">
+  <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firebase" width="18">
+  <img src="https://cdn.simpleicons.org/googlecloud/4285F4" alt="Google Cloud" width="18">
+  <img src="https://cdn.simpleicons.org/docker/2496ED" alt="Docker" width="18">
+  <img src="https://cdn.simpleicons.org/groq/F55036" alt="Groq" width="18">
+  <img src="https://cdn.simpleicons.org/googlegemini/8E75B2" alt="Gemini" width="18">
+  <img src="https://cdn.simpleicons.org/openrouter/111111" alt="OpenRouter" width="18">
+</p>
 
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#eff6ff","primaryBorderColor":"#2563eb","lineColor":"#334155","fontFamily":"Inter, Arial"}}}%%
@@ -321,6 +343,12 @@ The user experience is deliberately shaped like a guided audit rather than a
 single calculator form. Each screen adds context that is later used by either
 the deterministic engines or the AI agents.
 
+<p align="center">
+  <img src="https://cdn.simpleicons.org/html5/E34F26" alt="HTML5" width="18">
+  <img src="https://cdn.simpleicons.org/javascript/F7DF1E" alt="JavaScript" width="18">
+  <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firebase" width="18">
+</p>
+
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#f8fafc","primaryBorderColor":"#334155","lineColor":"#64748b","fontFamily":"Inter, Arial"}}}%%
 flowchart TD
@@ -369,6 +397,12 @@ flowchart TD
 The major user-facing use cases are broader than the initial verdict. A buyer
 can inspect the analysis, compare alternatives, generate documents, and share a
 decision package with advisors.
+
+<p align="center">
+  <img src="https://cdn.simpleicons.org/whatsapp/25D366" alt="WhatsApp" width="18">
+  <img src="https://cdn.simpleicons.org/adobeacrobatreader/B91C1C" alt="PDF" width="18">
+  <img src="https://cdn.simpleicons.org/googlegemini/8E75B2" alt="Gemini" width="18">
+</p>
 
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#ffffff","primaryBorderColor":"#111827","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
@@ -487,6 +521,13 @@ Key backend responsibilities:
 - generate PDF reports,
 - upload reports to GCS.
 
+<p align="center">
+  <img src="https://cdn.simpleicons.org/fastapi/009688" alt="FastAPI" width="18">
+  <img src="https://cdn.simpleicons.org/python/3776AB" alt="Python" width="18">
+  <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firebase" width="18">
+  <img src="https://cdn.simpleicons.org/googlecloud/4285F4" alt="Google Cloud" width="18">
+</p>
+
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#eff6ff","primaryBorderColor":"#2563eb","lineColor":"#334155","fontFamily":"Inter, Arial"}}}%%
 flowchart LR
@@ -541,6 +582,12 @@ flowchart LR
 The full analysis request keeps arithmetic, persistence, AI interpretation, and
 report rendering as separate responsibilities.
 
+<p align="center">
+  <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firestore" width="18">
+  <img src="https://cdn.simpleicons.org/googlegemini/8E75B2" alt="Gemini" width="18">
+  <img src="https://cdn.simpleicons.org/googlecloud/4285F4" alt="Cloud Storage" width="18">
+</p>
+
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"actorBkg":"#dbeafe","actorBorder":"#2563eb","actorTextColor":"#172554","activationBkgColor":"#fef3c7","activationBorderColor":"#d97706","sequenceNumberColor":"#ffffff","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
 sequenceDiagram
@@ -576,6 +623,11 @@ sequenceDiagram
 
 The deterministic path is the backbone of the product. It is intentionally
 pure Python and should remain testable without calling external model APIs.
+
+<p align="center">
+  <img src="https://cdn.simpleicons.org/python/3776AB" alt="Python" width="18">
+  <img src="https://cdn.simpleicons.org/pydantic/E92063" alt="Pydantic" width="18">
+</p>
 
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#ecfeff","primaryBorderColor":"#0891b2","lineColor":"#334155","fontFamily":"Inter, Arial"}}}%%
@@ -688,6 +740,12 @@ The blackboard includes:
 - active flags,
 - open questions.
 
+<p align="center">
+  <img src="https://cdn.simpleicons.org/groq/F55036" alt="Groq" width="18">
+  <img src="https://cdn.simpleicons.org/googlegemini/8E75B2" alt="Gemini" width="18">
+  <img src="https://cdn.simpleicons.org/openrouter/111111" alt="OpenRouter" width="18">
+</p>
+
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#fae8ff","primaryBorderColor":"#c026d3","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
 flowchart LR
@@ -755,6 +813,11 @@ The roundtable has a clear discussion arc. It is designed to avoid repetitive
 agent output by changing the task in each round: observe, challenge, converge,
 then conclude.
 
+<p align="center">
+  <img src="https://cdn.simpleicons.org/groq/F55036" alt="Groq" width="18">
+  <img src="https://cdn.simpleicons.org/googlegemini/8E75B2" alt="Gemini" width="18">
+</p>
+
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#fef3c7","primaryBorderColor":"#d97706","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
 stateDiagram-v2
@@ -808,6 +871,10 @@ Important model groups:
 The persisted Firestore model is session-centered. Every behavioral answer,
 input snapshot, simulation output, discussion message, verdict, and report is
 attached back to a buyer-owned session.
+
+<p align="center">
+  <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firestore" width="18">
+</p>
 
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#f1f5f9","primaryBorderColor":"#475569","lineColor":"#64748b","fontFamily":"Inter, Arial"}}}%%
@@ -895,6 +962,12 @@ erDiagram
 The API surface separates fast deterministic calculation, authenticated session
 workflows, AI-heavy analysis, streaming roundtable discussion, and report
 generation.
+
+<p align="center">
+  <img src="https://cdn.simpleicons.org/fastapi/009688" alt="FastAPI" width="18">
+  <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firebase" width="18">
+  <img src="https://cdn.simpleicons.org/googlegemini/8E75B2" alt="Gemini" width="18">
+</p>
 
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#eff6ff","primaryBorderColor":"#2563eb","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
@@ -1165,6 +1238,13 @@ The repository supports a containerized backend and static frontend deployment.
 The live deployment observed during analysis uses Firebase Hosting for the
 frontend and a containerized FastAPI backend exposed over HTTPS.
 
+<p align="center">
+  <img src="https://cdn.simpleicons.org/docker/2496ED" alt="Docker" width="18">
+  <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firebase" width="18">
+  <img src="https://cdn.simpleicons.org/googlecloud/4285F4" alt="Google Cloud" width="18">
+  <img src="https://cdn.simpleicons.org/railway/0B0D0E" alt="Railway" width="18">
+</p>
+
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#f8fafc","primaryBorderColor":"#334155","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
 flowchart LR
@@ -1251,6 +1331,11 @@ firebase deploy --only hosting
 The security model is session-scoped: the backend verifies identity first, then
 checks ownership before reading or writing session data.
 
+<p align="center">
+  <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firebase Auth" width="18">
+  <img src="https://cdn.simpleicons.org/fastapi/009688" alt="FastAPI" width="18">
+</p>
+
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#fee2e2","primaryBorderColor":"#dc2626","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
 flowchart TD
@@ -1318,6 +1403,15 @@ scraping, OCR, and QR scanning do not create meaningful per-user cost. The main
 variable cost is LLM and vision usage, followed by backend hosting once traffic
 grows beyond free or credit-backed tiers.
 
+<p align="center">
+  <img src="https://cdn.simpleicons.org/groq/F55036" alt="Groq" width="18">
+  <img src="https://cdn.simpleicons.org/googlegemini/8E75B2" alt="Gemini" width="18">
+  <img src="https://cdn.simpleicons.org/openrouter/111111" alt="OpenRouter" width="18">
+  <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firebase" width="18">
+  <img src="https://cdn.simpleicons.org/railway/0B0D0E" alt="Railway" width="18">
+  <img src="https://cdn.simpleicons.org/whatsapp/25D366" alt="WhatsApp" width="18">
+</p>
+
 ```mermaid
 %%{init: {"theme":"base","themeVariables":{"primaryColor":"#fef3c7","primaryBorderColor":"#d97706","lineColor":"#475569","fontFamily":"Inter, Arial"}}}%%
 flowchart TB
@@ -1358,9 +1452,9 @@ report and whether narrative synthesis is requested.
 
 | Provider | Usage Scenario | Unit Cost | Notes |
 |---|---|---:|---|
-| Groq, Llama models | Primary reasoning for most agents | ~$0.05-$0.10 input / ~$0.30-$0.50 output per 1M tokens | Extremely cheap; the workhorse for high-volume structured JSON calls |
-| Gemini Flash via OpenRouter or direct API | Final synthesis, narrative reasoning, fallback agent reasoning, counter-offer letter | Varies by model tier | Used when stronger synthesis or fallback reliability is needed |
-| OpenRouter | Provider routing and fallback | Depends on selected model | Lets the system route around provider outages or model-specific limits |
+| <img src="https://cdn.simpleicons.org/groq/F55036" alt="Groq" width="16"> Groq, Llama models | Primary reasoning for most agents | ~$0.05-$0.10 input / ~$0.30-$0.50 output per 1M tokens | Extremely cheap; the workhorse for high-volume structured JSON calls |
+| <img src="https://cdn.simpleicons.org/googlegemini/8E75B2" alt="Gemini" width="16"> Gemini Flash via OpenRouter or direct API | Final synthesis, narrative reasoning, fallback agent reasoning, counter-offer letter | Varies by model tier | Used when stronger synthesis or fallback reliability is needed |
+| <img src="https://cdn.simpleicons.org/openrouter/111111" alt="OpenRouter" width="16"> OpenRouter | Provider routing and fallback | Depends on selected model | Lets the system route around provider outages or model-specific limits |
 
 Estimated per-analysis LLM cost: **INR 2-INR 8 per full audit** for six agents
 when most calls are routed through the cheapest provider first.
@@ -1380,7 +1474,7 @@ inspection feature is actively used.
 
 #### 3. Frontend Hosting: Firebase
 
-The static frontend assets in `frontend/` are deployed through Firebase Hosting.
+The static frontend assets in `frontend/` are deployed through <img src="https://cdn.simpleicons.org/firebase/FFCA28" alt="Firebase" width="16"> Firebase Hosting.
 
 | Firebase Plan | Included | Monthly Cost at MVP Scale |
 |---|---|---:|
@@ -1391,7 +1485,7 @@ For the current MVP, the Spark free tier comfortably covers expected usage.
 
 #### 4. Backend Hosting: Railway Containerized FastAPI
 
-The backend can run as a Dockerized FastAPI service on Railway with autoscaling
+The backend can run as a <img src="https://cdn.simpleicons.org/docker/2496ED" alt="Docker" width="16"> Dockerized <img src="https://cdn.simpleicons.org/fastapi/009688" alt="FastAPI" width="16"> FastAPI service on <img src="https://cdn.simpleicons.org/railway/0B0D0E" alt="Railway" width="16"> Railway with autoscaling
 support.
 
 | Plan | Included | Estimated Monthly Cost |
@@ -1423,7 +1517,7 @@ optional.
 
 #### 6. WhatsApp Business API: Report Delivery
 
-The WhatsApp integration can deliver verdicts and key numbers directly to a
+The <img src="https://cdn.simpleicons.org/whatsapp/25D366" alt="WhatsApp" width="16"> WhatsApp integration can deliver verdicts and key numbers directly to a
 buyer.
 
 | Message Type | Cost per Message in India |
